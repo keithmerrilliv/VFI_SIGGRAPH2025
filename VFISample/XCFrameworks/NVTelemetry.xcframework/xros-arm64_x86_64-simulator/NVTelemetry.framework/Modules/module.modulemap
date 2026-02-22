@@ -1,0 +1,11 @@
+framework module NVTelemetry {
+  umbrella header "NVTelemetry.h"
+  export *
+
+  module * { export * }
+}
+
+module NVTelemetry.Swift {
+  header "NVTelemetry-Swift.h"
+  requires objc
+}

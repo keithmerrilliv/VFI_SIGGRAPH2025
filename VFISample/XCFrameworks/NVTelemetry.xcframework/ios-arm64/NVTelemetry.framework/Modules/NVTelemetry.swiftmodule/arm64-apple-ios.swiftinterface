@@ -1,0 +1,49 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 5.9.2 (swiftlang-5.9.2.2.56 clang-1500.1.0.2.5)
+// swift-module-flags: -target arm64-apple-ios14.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -module-name NVTelemetry
+// swift-module-flags-ignorable: -enable-bare-slash-regex
+import Foundation
+@_exported import NVTelemetry
+import Swift
+import UIKit
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+@_inheritsConvenienceInitializers @objc public class NVTConfig : ObjectiveC.NSObject {
+  public static let shared: NVTelemetry.NVTConfig
+  @objc public static func instance(forClientId clientId: Swift.String) -> NVTelemetry.NVTConfig
+  @objc public static func instanceOrShared(forClientId clientId: Swift.String) -> NVTelemetry.NVTConfig
+  @objc public var clientVer: Swift.String
+  @objc public var telemetryHost: Swift.String
+  @objc public var sessionId: Foundation.UUID
+  @objc public var userId: Swift.String?
+  @objc public var externalUserId: Swift.String?
+  @objc public var idpId: Swift.String?
+  @objc public var GDPRConsent: NVTelemetry.NVTGDPRConsent
+  @objc public var GDPRDeviceConsent: NVTelemetry.NVTGDPRConsent
+  @objc public func setAllGDPRConsents(_ consent: NVTelemetry.NVTGDPRConsent)
+  @objc public func setGDPRConsentForGuestMode()
+  @objc public var integrationId: Swift.String?
+  @objc public var deviceOS: Swift.String
+  @objc public var deviceOSVersion: Swift.String
+  @objc public var deviceType: Swift.String
+  @objc public var deviceId: Foundation.UUID
+  @objc public var deviceModel: Swift.String
+  @objc public var deviceMake: Swift.String
+  @objc public var clientType: Swift.String
+  @objc public var clientVariant: Swift.String
+  @objc public var productName: Swift.String?
+  @objc override dynamic public init()
+  @objc deinit
+}
+public protocol NVTEvent : Swift.Decodable, Swift.Encodable {
+  static var service: NVTelemetry.NVTService { get }
+  static var clientId: Swift.String { get }
+  static var clientName: Swift.String { get }
+  static var definitionVersion: Swift.String { get }
+  static var schemaVersion: Swift.String { get }
+  static var eventName: Swift.String { get }
+  static var GDPRCategory: NVTelemetry.NVTGDPRConsent { get }
+  func send()
+}
+public func NVTEventSend<T>(_ evt: T) where T : NVTelemetry.NVTEvent

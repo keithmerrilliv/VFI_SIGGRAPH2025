@@ -1,0 +1,5 @@
+framework module NVIDIAStreamKit_Private {
+    umbrella header "NVIDIAStreamKitPrivate.h"
+
+    export *
+}

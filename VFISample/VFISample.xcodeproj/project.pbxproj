@@ -1,0 +1,543 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1E78A60B2CAB416E0060302E /* OmniverseStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E78A60A2CAB416E0060302E /* OmniverseStateManager.swift */; };
+		1E78A60D2CAB419C0060302E /* OmniverseClientEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E78A60C2CAB419C0060302E /* OmniverseClientEvents.swift */; };
+		1ED6F00D2D5EBD6800D5D22D /* OmniversePrimSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED6F00C2D5EBD6800D5D22D /* OmniversePrimSystem.swift */; };
+		1ED6F00F2D5EBD8300D5D22D /* OmniverseMessageDispatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED6F00E2D5EBD8300D5D22D /* OmniverseMessageDispatcher.swift */; };
+		1ED6F0112D5EBDD200D5D22D /* MessageProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED6F0102D5EBDD200D5D22D /* MessageProtocol.swift */; };
+		3C3C580B2D712BA900479329 /* CloudXRKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3C3C580A2D712BA900479329 /* CloudXRKit */; };
+		823DF31D2C7F955900B420DB /* CleansheetCloudXRClientApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823DF31C2C7F955900B420DB /* CleansheetCloudXRClientApp.swift */; };
+		823DF31F2C7F955900B420DB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823DF31E2C7F955900B420DB /* ContentView.swift */; };
+		823DF3212C7F955900B420DB /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823DF3202C7F955900B420DB /* ImmersiveView.swift */; };
+		823DF3232C7F955A00B420DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 823DF3222C7F955A00B420DB /* Assets.xcassets */; };
+		823DF3262C7F955A00B420DB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 823DF3252C7F955A00B420DB /* Preview Assets.xcassets */; };
+		823DF3312C7F955A00B420DB /* CleansheetCloudXRClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823DF3302C7F955A00B420DB /* CleansheetCloudXRClientTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		823DF32D2C7F955A00B420DB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 823DF30D2C7F955900B420DB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 823DF3142C7F955900B420DB;
+			remoteInfo = CleansheetCloudXRClient;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1E78A60A2CAB416E0060302E /* OmniverseStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmniverseStateManager.swift; sourceTree = "<group>"; };
+		1E78A60C2CAB419C0060302E /* OmniverseClientEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmniverseClientEvents.swift; sourceTree = "<group>"; };
+		1ED6F00C2D5EBD6800D5D22D /* OmniversePrimSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmniversePrimSystem.swift; sourceTree = "<group>"; };
+		1ED6F00E2D5EBD8300D5D22D /* OmniverseMessageDispatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmniverseMessageDispatcher.swift; sourceTree = "<group>"; };
+		1ED6F0102D5EBDD200D5D22D /* MessageProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageProtocol.swift; sourceTree = "<group>"; };
+		823DF3152C7F955900B420DB /* VFISample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VFISample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		823DF31C2C7F955900B420DB /* CleansheetCloudXRClientApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleansheetCloudXRClientApp.swift; sourceTree = "<group>"; };
+		823DF31E2C7F955900B420DB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		823DF3202C7F955900B420DB /* ImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveView.swift; sourceTree = "<group>"; };
+		823DF3222C7F955A00B420DB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		823DF3252C7F955A00B420DB /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		823DF3272C7F955A00B420DB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		823DF32C2C7F955A00B420DB /* CleansheetCloudXRClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CleansheetCloudXRClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		823DF3302C7F955A00B420DB /* CleansheetCloudXRClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleansheetCloudXRClientTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		823DF3122C7F955900B420DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C3C580B2D712BA900479329 /* CloudXRKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		823DF3292C7F955A00B420DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1E78A6092CAB41430060302E /* Omniverse */ = {
+			isa = PBXGroup;
+			children = (
+				1ED6F0102D5EBDD200D5D22D /* MessageProtocol.swift */,
+				1ED6F00E2D5EBD8300D5D22D /* OmniverseMessageDispatcher.swift */,
+				1ED6F00C2D5EBD6800D5D22D /* OmniversePrimSystem.swift */,
+				1E78A60A2CAB416E0060302E /* OmniverseStateManager.swift */,
+				1E78A60C2CAB419C0060302E /* OmniverseClientEvents.swift */,
+			);
+			path = Omniverse;
+			sourceTree = "<group>";
+		};
+		823DF30C2C7F955900B420DB = {
+			isa = PBXGroup;
+			children = (
+				1E78A6092CAB41430060302E /* Omniverse */,
+				823DF32F2C7F955A00B420DB /* VFISampleTests */,
+				823DF3172C7F955900B420DB /* VFISample */,
+				823DF3162C7F955900B420DB /* Products */,
+				82E6DA062C80C0E2004E376D /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		823DF3162C7F955900B420DB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				823DF3152C7F955900B420DB /* VFISample.app */,
+				823DF32C2C7F955A00B420DB /* CleansheetCloudXRClientTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		823DF3172C7F955900B420DB /* VFISample */ = {
+			isa = PBXGroup;
+			children = (
+				823DF31C2C7F955900B420DB /* CleansheetCloudXRClientApp.swift */,
+				823DF31E2C7F955900B420DB /* ContentView.swift */,
+				823DF3202C7F955900B420DB /* ImmersiveView.swift */,
+				823DF3222C7F955A00B420DB /* Assets.xcassets */,
+				823DF3272C7F955A00B420DB /* Info.plist */,
+				823DF3242C7F955A00B420DB /* Preview Content */,
+			);
+			path = VFISample;
+			sourceTree = "<group>";
+		};
+		823DF3242C7F955A00B420DB /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				823DF3252C7F955A00B420DB /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		823DF32F2C7F955A00B420DB /* VFISampleTests */ = {
+			isa = PBXGroup;
+			children = (
+				823DF3302C7F955A00B420DB /* CleansheetCloudXRClientTests.swift */,
+			);
+			path = VFISampleTests;
+			sourceTree = "<group>";
+		};
+		82E6DA062C80C0E2004E376D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		823DF3142C7F955900B420DB /* VFISample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 823DF3342C7F955A00B420DB /* Build configuration list for PBXNativeTarget "VFISample" */;
+			buildPhases = (
+				823DF3112C7F955900B420DB /* Sources */,
+				823DF3122C7F955900B420DB /* Frameworks */,
+				823DF3132C7F955900B420DB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VFISample;
+			packageProductDependencies = (
+				3C3C580A2D712BA900479329 /* CloudXRKit */,
+			);
+			productName = CleansheetCloudXRClient;
+			productReference = 823DF3152C7F955900B420DB /* VFISample.app */;
+			productType = "com.apple.product-type.application";
+		};
+		823DF32B2C7F955A00B420DB /* CleansheetCloudXRClientTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 823DF3372C7F955A00B420DB /* Build configuration list for PBXNativeTarget "CleansheetCloudXRClientTests" */;
+			buildPhases = (
+				823DF3282C7F955A00B420DB /* Sources */,
+				823DF3292C7F955A00B420DB /* Frameworks */,
+				823DF32A2C7F955A00B420DB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				823DF32E2C7F955A00B420DB /* PBXTargetDependency */,
+			);
+			name = CleansheetCloudXRClientTests;
+			productName = CleansheetCloudXRClientTests;
+			productReference = 823DF32C2C7F955A00B420DB /* CleansheetCloudXRClientTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		823DF30D2C7F955900B420DB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1530;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					823DF3142C7F955900B420DB = {
+						CreatedOnToolsVersion = 15.3;
+					};
+					823DF32B2C7F955A00B420DB = {
+						CreatedOnToolsVersion = 15.3;
+						TestTargetID = 823DF3142C7F955900B420DB;
+					};
+				};
+			};
+			buildConfigurationList = 823DF3102C7F955900B420DB /* Build configuration list for PBXProject "VFISample" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 823DF30C2C7F955900B420DB;
+			packageReferences = (
+				3C3C58092D712AAA00479329 /* XCRemoteSwiftPackageReference "cloudxr-framework" */,
+			);
+			productRefGroup = 823DF3162C7F955900B420DB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				823DF3142C7F955900B420DB /* VFISample */,
+				823DF32B2C7F955A00B420DB /* CleansheetCloudXRClientTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		823DF3132C7F955900B420DB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				823DF3262C7F955A00B420DB /* Preview Assets.xcassets in Resources */,
+				823DF3232C7F955A00B420DB /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		823DF32A2C7F955A00B420DB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		823DF3112C7F955900B420DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1E78A60D2CAB419C0060302E /* OmniverseClientEvents.swift in Sources */,
+				823DF31F2C7F955900B420DB /* ContentView.swift in Sources */,
+				823DF31D2C7F955900B420DB /* CleansheetCloudXRClientApp.swift in Sources */,
+				1E78A60B2CAB416E0060302E /* OmniverseStateManager.swift in Sources */,
+				1ED6F0112D5EBDD200D5D22D /* MessageProtocol.swift in Sources */,
+				823DF3212C7F955900B420DB /* ImmersiveView.swift in Sources */,
+				1ED6F00F2D5EBD8300D5D22D /* OmniverseMessageDispatcher.swift in Sources */,
+				1ED6F00D2D5EBD6800D5D22D /* OmniversePrimSystem.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		823DF3282C7F955A00B420DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				823DF3312C7F955A00B420DB /* CleansheetCloudXRClientTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		823DF32E2C7F955A00B420DB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 823DF3142C7F955900B420DB /* VFISample */;
+			targetProxy = 823DF32D2C7F955A00B420DB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		823DF3322C7F955A00B420DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = SX493JL6TF;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = xros;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		823DF3332C7F955A00B420DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = SX493JL6TF;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = xros;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		823DF3352C7F955A00B420DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = Futurama;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"VFISample/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nvidia.ptcdemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		823DF3362C7F955A00B420DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = Futurama;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"VFISample/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nvidia.ptcdemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		823DF3382C7F955A00B420DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nvidia.cloudxr.visionpro.cleansheet.CleansheetCloudXRClientTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VFISample.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VFISample";
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		823DF3392C7F955A00B420DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nvidia.cloudxr.visionpro.cleansheet.CleansheetCloudXRClientTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VFISample.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VFISample";
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		823DF3102C7F955900B420DB /* Build configuration list for PBXProject "VFISample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				823DF3322C7F955A00B420DB /* Debug */,
+				823DF3332C7F955A00B420DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		823DF3342C7F955A00B420DB /* Build configuration list for PBXNativeTarget "VFISample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				823DF3352C7F955A00B420DB /* Debug */,
+				823DF3362C7F955A00B420DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		823DF3372C7F955A00B420DB /* Build configuration list for PBXNativeTarget "CleansheetCloudXRClientTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				823DF3382C7F955A00B420DB /* Debug */,
+				823DF3392C7F955A00B420DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3C3C58092D712AAA00479329 /* XCRemoteSwiftPackageReference "cloudxr-framework" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/NVIDIA/cloudxr-framework";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3C3C580A2D712BA900479329 /* CloudXRKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3C3C58092D712AAA00479329 /* XCRemoteSwiftPackageReference "cloudxr-framework" */;
+			productName = CloudXRKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 823DF30D2C7F955900B420DB /* Project object */;
+}
