@@ -177,7 +177,12 @@ class OmniversePrimComponent: Component {
                     component.representativeBoxCreated = true
                     let primPath = component.primPath
                     entity.name = primPath
-                    sessionEntity.addChild(entity)
+                    // Keep prim entities as siblings of sessionEntity (under content root).
+                    // CloudXRKit 6.0.2 suppresses gesture recognition on the entire
+                    // subtree of CloudXRSessionComponent entities.
+                    if let contentRoot = sessionEntity.parent {
+                        contentRoot.addChild(entity)
+                    }
                     objectNameAnchorEntities[primPath] = entity
 
                     drawPrimBoundingBox(
@@ -186,6 +191,14 @@ class OmniversePrimComponent: Component {
                         sessionEntity: sessionEntity
                     )
                     Self.assignParentChild(omniversePrimEntity: entity, objectNameAnchorEntities: objectNameAnchorEntities)
+
+                    // Diagnostic: log entity hierarchy and component state
+                    Self.logger.info("[DIAG] Prim '\(primPath)' parent='\(entity.parent?.name ?? "nil")' isEnabled=\(entity.isEnabled)")
+                    Self.logger.info("[DIAG]   hasInputTarget=\(entity.components[InputTargetComponent.self] != nil) hasCollision=\(entity.components[CollisionComponent.self] != nil)")
+                    if !entity.children.isEmpty {
+                        let bbox = entity.children[0]
+                        Self.logger.info("[DIAG]   bbox '\(bbox.name)' hasInputTarget=\(bbox.components[InputTargetComponent.self] != nil) hasCollision=\(bbox.components[CollisionComponent.self] != nil) pos=\(bbox.position(relativeTo: nil))")
+                    }
                 } else {
                     // Check transformation update and send transformation events
                     guard
@@ -193,22 +206,43 @@ class OmniversePrimComponent: Component {
                         sendOVTransformationTask == nil
                     else { continue }
                     
-                    // Handle the camera transform update if it has changed since the last frame.
+                    // Handle the camera/session transform update.
+                    // Apply the camera transform DIRECTLY to position only (not
+                    // orientation) so bboxes stay axis-aligned. The direct transform
+                    // converts FROM Omniverse space TO RealityKit space. (The old code
+                    // used the inverse because prims were children of sessionEntity and
+                    // needed to undo the parent's transform. As siblings, they need the
+                    // forward conversion.)
                     if component.latestCameraTransform != currentCameraTransform {
-                        // Undo the camera transform first.
-                        entity.transform.matrix = component.latestCameraTransform.matrix * entity.transform.matrix
                         component.latestCameraTransform = currentCameraTransform
-                        // Apply the camera transform after the update.
-                        entity.transform.matrix = component.latestCameraTransform.matrix.inverse * entity.transform.matrix
+                        let camXform = sessionEntity.transform.matrix * component.latestCameraTransform.matrix
 
-                        // Log final world position once per camera change (first entity only)
+                        // Update prim entity position
+                        let omniversePos = SIMD4<Float>(component.shapeInfo.worldPosition, 1.0)
+                        let convertedPos = camXform * omniversePos
+                        entity.position = simd_float3(convertedPos.x, convertedPos.y, convertedPos.z)
+
+                        // Update bbox child position — the local offset must also be
+                        // rotated through the camera transform since the entity has
+                        // identity rotation (local axes = world axes).
+                        if !entity.children.isEmpty {
+                            let bboxCenter = SIMD4<Float>(component.shapeInfo.boundingBoxCenter, 1.0)
+                            let convertedCenter = camXform * bboxCenter
+                            let bboxWorldPos = simd_float3(convertedCenter.x, convertedCenter.y, convertedCenter.z)
+                            entity.children[0].position = bboxWorldPos - entity.position
+                        }
+
+                        // Log transforms for debugging spatial alignment
                         if entity.name.contains("DGX") {
                             let worldPos = entity.position(relativeTo: nil)
                             Self.logger.info("DGX bbox world pos after camera xform: \(worldPos)")
+                            Self.logger.info("[DIAG] sessionEntity transform: pos=\(sessionEntity.position) scale=\(sessionEntity.scale)")
+                            Self.logger.info("[DIAG] DGX entity transform matrix col0=\(entity.transform.matrix.columns.0) col1=\(entity.transform.matrix.columns.1)")
                         }
                     }
 
-                    component.localOmniversePrimTransform.matrix = component.latestCameraTransform.matrix * entity.transform.matrix
+                    // Convert back to Omniverse space for server comparison
+                    component.localOmniversePrimTransform.matrix = component.latestCameraTransform.matrix.inverse * entity.transform.matrix
 
                     // Send an update to OV if we are not in sync.
                     if component.remoteOmniversePrimTransform != component.localOmniversePrimTransform {
@@ -301,7 +335,10 @@ class OmniversePrimComponent: Component {
             // streamed content regardless of server XR mode.
             if (type == "pp_camera_transform" || type == "camera_transform"),
                let cameraTransform = decodedMessage["Transform"] as? [Double] {
-                Self.logger.info("Received \(type ?? "") — applying camera transform")
+                // Log the first camera transform for debugging coordinate alignment
+                if currentCameraTransform == .identity {
+                    Self.logger.info("[DIAG] First camera transform raw: \(cameraTransform)")
+                }
                 let floats = cameraTransform.map { Float($0) }
                 guard floats.count >= 16 else {
                     Self.logger.warning("Camera transform has \(floats.count) values, expected 16")
@@ -450,22 +487,10 @@ class OmniversePrimComponent: Component {
 
         objectBoundingBoxEntity.name = primPath
 
-        // Convert the world position of the box entity to the local coordinate system relative to the anchor
-        // As the anchor entity is directly attached to the sessionEntity,
-        // so the relative world position of anchor antity and box entity can not be directly matched.
-        // Therefore, we need to get the world position of box entity after it is attached to sessionEntity first,
-        // then covert the world position of box entity to the local coordinate system relative to the anchor
-        sessionEntity.addChild(objectBoundingBoxEntity)
-        objectBoundingBoxEntity.position = component.shapeInfo.boundingBoxCenter
-        let inverseTransform = omniversePrimEntity.transformMatrix(relativeTo: nil).inverse
-        let worldPosition = SIMD4<Float>(
-            simd_float3(
-                objectBoundingBoxEntity.position(relativeTo: nil).x,
-                objectBoundingBoxEntity.position(relativeTo: nil).y,
-                objectBoundingBoxEntity.position(relativeTo: nil).z
-            ),
-            1.0
-        )
+        // Compute bbox position in the prim entity's local coordinate space.
+        // The bbox center and world position are both in Omniverse world space,
+        // so the local offset is simply the difference.
+        let localOffset = component.shapeInfo.boundingBoxCenter - component.shapeInfo.worldPosition
         
         // MARK:  - TEXT Entity
         let textEntity = textGen(textString: "Testing")
@@ -476,9 +501,8 @@ class OmniversePrimComponent: Component {
         
         
         
-        let localPosition = inverseTransform * worldPosition
         omniversePrimEntity.addChild(objectBoundingBoxEntity)
-        objectBoundingBoxEntity.position = simd_float3(localPosition.x, localPosition.y, localPosition.z)
+        objectBoundingBoxEntity.position = localOffset
         objectBoundingBoxEntity.components.set(InputTargetComponent(allowedInputTypes: [.indirect, .direct]))
         objectBoundingBoxEntity.components.set(HoverEffectComponent(.highlight(
             HoverEffectComponent.HighlightHoverEffectStyle(color: .cyan, strength: 8.0)
