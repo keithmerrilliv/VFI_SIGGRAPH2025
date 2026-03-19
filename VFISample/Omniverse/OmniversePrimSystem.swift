@@ -88,6 +88,7 @@ class OmniversePrimComponent: Component {
     // Local transform and camera transform matrices are used to handle OV camera/anchor changes.
     var localOmniversePrimTransform: Transform = .identity
     var latestCameraTransform: Transform = .identity
+    var lastAppliedCameraTranslation: simd_float3 = .zero
 
     public init(primPath: String) {
         self.primPath = primPath
@@ -120,6 +121,13 @@ class OmniversePrimComponent: Component {
 
     // Origin tracking
     var currentCameraTransform: Transform = .identity
+    /// The first camera transform's rotation — used for Z-up→Y-up coordinate
+    /// conversion. Head tracking rotation changes are ignored (RealityKit
+    /// handles them automatically for world-space entities).
+    var coordinateConversion: simd_float4x4?
+    /// The full camera world transform (Y-up). Its inverse is used to convert
+    /// prim world positions to camera-relative positions.
+    var cameraWorldTransform: simd_float4x4 = matrix_identity_float4x4
 
     required init(scene: RealityKit.Scene) {
         attachOmniverseMessageDispatcher(dispatcher: AppModel.omniverseMessageDispatcher)
@@ -192,13 +200,9 @@ class OmniversePrimComponent: Component {
                     )
                     Self.assignParentChild(omniversePrimEntity: entity, objectNameAnchorEntities: objectNameAnchorEntities)
 
-                    // Diagnostic: log entity hierarchy and component state
-                    Self.logger.info("[DIAG] Prim '\(primPath)' parent='\(entity.parent?.name ?? "nil")' isEnabled=\(entity.isEnabled)")
-                    Self.logger.info("[DIAG]   hasInputTarget=\(entity.components[InputTargetComponent.self] != nil) hasCollision=\(entity.components[CollisionComponent.self] != nil)")
-                    if !entity.children.isEmpty {
-                        let bbox = entity.children[0]
-                        Self.logger.info("[DIAG]   bbox '\(bbox.name)' hasInputTarget=\(bbox.components[InputTargetComponent.self] != nil) hasCollision=\(bbox.components[CollisionComponent.self] != nil) pos=\(bbox.position(relativeTo: nil))")
-                    }
+                    // Apply coordinate conversion and camera offset
+                    applyPrimPosition(entity: entity, component: component)
+                    Self.logger.info("[DIAG] Prim '\(primPath)' initial pos=\(entity.position)")
                 } else {
                     // Check transformation update and send transformation events
                     guard
@@ -206,43 +210,14 @@ class OmniversePrimComponent: Component {
                         sendOVTransformationTask == nil
                     else { continue }
                     
-                    // Handle the camera/session transform update.
-                    // Apply the camera transform DIRECTLY to position only (not
-                    // orientation) so bboxes stay axis-aligned. The direct transform
-                    // converts FROM Omniverse space TO RealityKit space. (The old code
-                    // used the inverse because prims were children of sessionEntity and
-                    // needed to undo the parent's transform. As siblings, they need the
-                    // forward conversion.)
-                    if component.latestCameraTransform != currentCameraTransform {
-                        component.latestCameraTransform = currentCameraTransform
-                        let camXform = sessionEntity.transform.matrix * component.latestCameraTransform.matrix
-
-                        // Update prim entity position
-                        let omniversePos = SIMD4<Float>(component.shapeInfo.worldPosition, 1.0)
-                        let convertedPos = camXform * omniversePos
-                        entity.position = simd_float3(convertedPos.x, convertedPos.y, convertedPos.z)
-
-                        // Update bbox child position — the local offset must also be
-                        // rotated through the camera transform since the entity has
-                        // identity rotation (local axes = world axes).
-                        if !entity.children.isEmpty {
-                            let bboxCenter = SIMD4<Float>(component.shapeInfo.boundingBoxCenter, 1.0)
-                            let convertedCenter = camXform * bboxCenter
-                            let bboxWorldPos = simd_float3(convertedCenter.x, convertedCenter.y, convertedCenter.z)
-                            entity.children[0].position = bboxWorldPos - entity.position
-                        }
-
-                        // Log transforms for debugging spatial alignment
-                        if entity.name.contains("DGX") {
-                            let worldPos = entity.position(relativeTo: nil)
-                            Self.logger.info("DGX bbox world pos after camera xform: \(worldPos)")
-                            Self.logger.info("[DIAG] sessionEntity transform: pos=\(sessionEntity.position) scale=\(sessionEntity.scale)")
-                            Self.logger.info("[DIAG] DGX entity transform matrix col0=\(entity.transform.matrix.columns.0) col1=\(entity.transform.matrix.columns.1)")
-                        }
+                    // Update position if camera changed (bay switch).
+                    let camTranslation = simd_float3(cameraWorldTransform.columns.3.x, cameraWorldTransform.columns.3.y, cameraWorldTransform.columns.3.z)
+                    if component.lastAppliedCameraTranslation != camTranslation {
+                        applyPrimPosition(entity: entity, component: component)
                     }
 
-                    // Convert back to Omniverse space for server comparison
-                    component.localOmniversePrimTransform.matrix = component.latestCameraTransform.matrix.inverse * entity.transform.matrix
+                    // Convert to Omniverse space for server comparison (drag)
+                    component.localOmniversePrimTransform.matrix = cameraWorldTransform * entity.transform.matrix
 
                     // Send an update to OV if we are not in sync.
                     if component.remoteOmniversePrimTransform != component.localOmniversePrimTransform {
@@ -277,6 +252,29 @@ class OmniversePrimComponent: Component {
         }
         guard let channel = cachedChannel else { return false }
         return channel.sendServerMessage(data)
+    }
+
+    /// Position a prim entity in RealityKit world space using the camera's
+    /// inverse view matrix on POSITION ONLY (orientation stays identity so
+    /// bboxes remain axis-aligned). The view matrix accounts for both the
+    /// camera's position and viewing direction.
+    private func applyPrimPosition(entity: Entity, component: OmniversePrimComponent) {
+        // Use the inverse of the full camera world transform (view matrix)
+        // to convert from Omniverse Y-up world space to camera-relative space.
+        let viewMatrix = cameraWorldTransform.inverse
+
+        let omniversePos = SIMD4<Float>(component.shapeInfo.worldPosition, 1.0)
+        let viewPos = viewMatrix * omniversePos
+        entity.position = simd_float3(viewPos.x, viewPos.y, viewPos.z)
+
+        // Convert bbox child position with same view matrix
+        if !entity.children.isEmpty {
+            let bboxCenter = SIMD4<Float>(component.shapeInfo.boundingBoxCenter, 1.0)
+            let bboxViewPos = viewMatrix * bboxCenter
+            entity.children[0].position = simd_float3(bboxViewPos.x, bboxViewPos.y, bboxViewPos.z) - entity.position
+        }
+
+        component.lastAppliedCameraTranslation = simd_float3(cameraWorldTransform.columns.3.x, cameraWorldTransform.columns.3.y, cameraWorldTransform.columns.3.z)
     }
 
     private func sendPrimPath(session: Session) {
@@ -351,6 +349,26 @@ class OmniversePrimComponent: Component {
                     simd_float4(floats[12], floats[13], floats[14], floats[15])
                 )
                 currentCameraTransform = .init(matrix: matrix)
+                // Capture the first camera transform's rotation as the coordinate
+                // conversion (Z-up → Y-up).
+                if coordinateConversion == nil {
+                    // Extract just the rotation (zero out translation)
+                    var rotOnly = matrix
+                    rotOnly.columns.3 = simd_float4(0, 0, 0, 1)
+                    coordinateConversion = rotOnly
+                    Self.logger.info("[DIAG] Captured coordinate conversion matrix")
+                }
+                // Store the full camera world transform for view matrix computation.
+                // Only update on bay switches (non-zero translation). Head tracking
+                // sends zero-translation transforms that should not override.
+                let newTranslation = simd_float3(matrix.columns.3.x, matrix.columns.3.y, matrix.columns.3.z)
+                if length(newTranslation) > 0.001 {
+                    let oldTranslation = simd_float3(self.cameraWorldTransform.columns.3.x, self.cameraWorldTransform.columns.3.y, self.cameraWorldTransform.columns.3.z)
+                    if newTranslation != oldTranslation {
+                        Self.logger.info("[DIAG] Bay camera changed: \(oldTranslation) → \(newTranslation)")
+                    }
+                    self.cameraWorldTransform = matrix
+                }
             }
             if type == "PrimTap",
                let entityName = decodedMessage["PrimPath"] as? String,
