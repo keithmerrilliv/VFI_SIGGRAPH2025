@@ -216,8 +216,11 @@ class OmniversePrimComponent: Component {
                         applyPrimPosition(entity: entity, component: component)
                     }
 
-                    // Convert to Omniverse space for server comparison (drag)
-                    component.localOmniversePrimTransform.matrix = cameraWorldTransform * entity.transform.matrix
+                    // Convert back to Omniverse Z-up space for server comparison (drag)
+                    if let conv = coordinateConversion {
+                        let inverseViewMatrix = simd_float4x4(conv).inverse * cameraWorldTransform
+                        component.localOmniversePrimTransform.matrix = inverseViewMatrix * entity.transform.matrix
+                    }
 
                     // Send an update to OV if we are not in sync.
                     if component.remoteOmniversePrimTransform != component.localOmniversePrimTransform {
@@ -254,20 +257,22 @@ class OmniversePrimComponent: Component {
         return channel.sendServerMessage(data)
     }
 
-    /// Position a prim entity in RealityKit world space using the camera's
-    /// inverse view matrix on POSITION ONLY (orientation stays identity so
-    /// bboxes remain axis-aligned). The view matrix accounts for both the
-    /// camera's position and viewing direction.
+    /// Position a prim entity in RealityKit world space.
+    /// Pipeline: Z-up position → Y-up (coordinateConversion) → camera-relative (view matrix).
+    /// Only POSITION is transformed — orientation stays identity so bboxes stay axis-aligned.
     private func applyPrimPosition(entity: Entity, component: OmniversePrimComponent) {
-        // Use the inverse of the full camera world transform (view matrix)
-        // to convert from Omniverse Y-up world space to camera-relative space.
-        let viewMatrix = cameraWorldTransform.inverse
+        guard let conv = coordinateConversion else { return }
 
-        let omniversePos = SIMD4<Float>(component.shapeInfo.worldPosition, 1.0)
-        let viewPos = viewMatrix * omniversePos
+        // Step 1: Convert from Omniverse Z-up to Y-up
+        // Step 2: Apply camera view matrix (inverse of camera world transform) for
+        //         camera-relative positioning (handles bay camera position + direction)
+        let viewMatrix = cameraWorldTransform.inverse * conv
+
+        let primPos = SIMD4<Float>(component.shapeInfo.worldPosition, 1.0)
+        let viewPos = viewMatrix * primPos
         entity.position = simd_float3(viewPos.x, viewPos.y, viewPos.z)
 
-        // Convert bbox child position with same view matrix
+        // Convert bbox child position with same pipeline
         if !entity.children.isEmpty {
             let bboxCenter = SIMD4<Float>(component.shapeInfo.boundingBoxCenter, 1.0)
             let bboxViewPos = viewMatrix * bboxCenter
@@ -359,14 +364,18 @@ class OmniversePrimComponent: Component {
                     Self.logger.info("[DIAG] Captured coordinate conversion matrix")
                 }
                 // Store the full camera world transform for view matrix computation.
-                // Only update on bay switches (non-zero translation). Head tracking
-                // sends zero-translation transforms that should not override.
+                // Update on:
+                //   1. First non-zero transform (initial bay camera position)
+                //   2. Bay switches (translation moves > 1m)
+                // Ignore: head tracking (small continuous translation changes)
                 let newTranslation = simd_float3(matrix.columns.3.x, matrix.columns.3.y, matrix.columns.3.z)
-                if length(newTranslation) > 0.001 {
-                    let oldTranslation = simd_float3(self.cameraWorldTransform.columns.3.x, self.cameraWorldTransform.columns.3.y, self.cameraWorldTransform.columns.3.z)
-                    if newTranslation != oldTranslation {
-                        Self.logger.info("[DIAG] Bay camera changed: \(oldTranslation) → \(newTranslation)")
-                    }
+                let oldTranslation = simd_float3(self.cameraWorldTransform.columns.3.x, self.cameraWorldTransform.columns.3.y, self.cameraWorldTransform.columns.3.z)
+                let distanceMoved = length(newTranslation - oldTranslation)
+                let isFirstBayCamera = (length(oldTranslation) < 0.001 && length(newTranslation) > 0.001)
+                let isBaySwitch = distanceMoved > 1.0
+
+                if isFirstBayCamera || isBaySwitch {
+                    Self.logger.info("[DIAG] Bay camera changed: \(oldTranslation) → \(newTranslation) (dist=\(distanceMoved))")
                     self.cameraWorldTransform = matrix
                 }
             }
