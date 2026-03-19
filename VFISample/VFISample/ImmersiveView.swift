@@ -19,6 +19,7 @@ class AppModel {
 
     public var stateManager: OmniverseStateManager = OmniverseStateManager()
     public static var omniverseMessageDispatcher = OmniverseMessageDispatcher()
+    public var sharePlayManager = SharePlayManager()
 
     init(cxrSession: Session) {
         self.cloudXRSession = cxrSession
@@ -98,6 +99,16 @@ struct StreamingView: View {
                 lastEntityTapped = primEntity
                 Self.logger.info("Sending PrimTap for: '\(primEntity.name)'")
                 appModel.cloudXRSession?.sendServerMessage(encodeJSON(PrimTapInputEvent(primEntity.name)))
+
+                // Broadcast selection to SharePlay participants
+                if appModel.sharePlayManager.isSharePlayActive {
+                    appModel.sharePlayManager.sendSelection(
+                        SharePlaySelectionMessage(
+                            selectedPrimPath: primEntity.name,
+                            senderID: appModel.sharePlayManager.localParticipantID
+                        )
+                    )
+                }
             }
     }
 

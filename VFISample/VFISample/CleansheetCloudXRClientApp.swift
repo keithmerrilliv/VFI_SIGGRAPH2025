@@ -7,6 +7,7 @@
 
 import SwiftUI
 import os.log
+import GroupActivities
 
 @preconcurrency import CloudXRKit
 
