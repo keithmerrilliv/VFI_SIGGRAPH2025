@@ -231,19 +231,18 @@ class OmniversePrimComponent: Component {
         }
     }
 
-    /// Send data to the server via the MessageChannel (preferred) or legacy session path.
-    private func sendToServer(_ data: Data, session: Session) {
-        // Resolve/cache the MessageChannel on first use
+    /// Send data to the server via the MessageChannel.
+    /// Returns true if the channel was available and the message was sent.
+    /// Does NOT fall back to the legacy session path (which silently fails in 6.0.2).
+    @discardableResult
+    private func sendToServer(_ data: Data, session: Session) -> Bool {
         if cachedChannel == nil {
             if let channelInfo = session.availableMessageChannels.first {
                 cachedChannel = session.getMessageChannel(channelInfo)
             }
         }
-        if let channel = cachedChannel {
-            _ = channel.sendServerMessage(data)
-        } else {
-            session.sendServerMessage(data)
-        }
+        guard let channel = cachedChannel else { return false }
+        return channel.sendServerMessage(data)
     }
 
     private func sendPrimPath(session: Session) {
@@ -255,16 +254,18 @@ class OmniversePrimComponent: Component {
             defer { entity.components[OmniversePrimComponent.self] = component }
             if !component.shapeInfoRequested {
                 Self.logger.info("Requesting prim info for: \(component.primPath)")
-                sendToServer(encodeJSON(RequestPrimInfoInputEvent(component.primPath)), session: session)
-                component.shapeInfoRequested = true
+                if sendToServer(encodeJSON(RequestPrimInfoInputEvent(component.primPath)), session: session) {
+                    component.shapeInfoRequested = true
+                }
             }
         }
         // Request camera transform once so bounding boxes can be aligned
         // with the streamed content from the first frame.
         if !cameraTransformRequested {
             Self.logger.info("Requesting camera transform from server")
-            sendToServer(encodeJSON(RequestCameraTransformEvent()), session: session)
-            cameraTransformRequested = true
+            if sendToServer(encodeJSON(RequestCameraTransformEvent()), session: session) {
+                cameraTransformRequested = true
+            }
         }
     }
 

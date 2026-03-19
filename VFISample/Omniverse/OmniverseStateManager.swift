@@ -66,13 +66,13 @@ public class OmniverseStateManager {
         return state.waitingForCompletion
     }
 
-    /// Send data to the server via MessageChannel (preferred) or legacy session path.
+    /// Send data to the server via the MessageChannel.
     private func sendData(_ data: Data) {
-        if let channel = messageChannel {
-            _ = channel.sendServerMessage(data)
-        } else {
-            session?.sendServerMessage(data)
+        guard let channel = messageChannel else {
+            Self.logger.warning("MessageChannel not ready — dropping message")
+            return
         }
+        _ = channel.sendServerMessage(data)
     }
 
     public func sync() {

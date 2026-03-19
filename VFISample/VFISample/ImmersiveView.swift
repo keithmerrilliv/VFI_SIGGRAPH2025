@@ -62,11 +62,11 @@ class AppModel {
 
     /// Send application data to the Omniverse server via the MessageChannel.
     func sendMessage(_ data: Data) {
-        if let channel = messageChannel {
-            _ = channel.sendServerMessage(data)
-        } else {
-            cloudXRSession?.sendServerMessage(data)
+        guard let channel = messageChannel else {
+            Self.logger.warning("MessageChannel not ready — dropping message")
+            return
         }
+        _ = channel.sendServerMessage(data)
     }
 }
 

@@ -22,32 +22,23 @@ public class OmniverseMessageDispatcher: @unchecked Sendable {
         category: String(describing: OmniverseMessageDispatcher.self)
     )
 
-    private var serverListener: Task<Void, Never>?
     private var channelListener: Task<Void, Never>?
     private var listeners = [OmniverseMessageListener]()
 
-    public var session: Session? {
-        didSet {
-            serverListener?.cancel()
-            self.serverListener = Task {
-                await eventDecoder()
-            }
-        }
-    }
+    /// Retained for reference but no longer starts a listener automatically.
+    /// Use `messageChannel` instead — the legacy `session.serverMessageStream`
+    /// is superseded by `MessageChannel.receivedMessageStream` in SDK 6.0.2.
+    public var session: Session?
 
     /// Set the MessageChannel to listen on its receivedMessageStream.
-    /// Stops the legacy session listener to avoid duplicate delivery.
     public var messageChannel: MessageChannel? {
         didSet {
             channelListener?.cancel()
             guard let channel = messageChannel else { return }
-            // Stop the legacy session listener — the channel supersedes it
-            serverListener?.cancel()
-            serverListener = nil
             self.channelListener = Task {
                 for await message in channel.receivedMessageStream {
                     await MainActor.run {
-                        listeners.forEach({ $0.onMessageReceived(message: message) })
+                        self.listeners.forEach({ $0.onMessageReceived(message: message) })
                     }
                 }
             }
@@ -56,7 +47,9 @@ public class OmniverseMessageDispatcher: @unchecked Sendable {
     }
 
     public func attach(_ listener: OmniverseMessageListener) {
-        detach(listener)
+        // Remove any existing listener of the same type to prevent duplicates
+        // when RealityKit creates multiple System instances (one per Scene).
+        listeners.removeAll(where: { type(of: $0) == type(of: listener) })
         listeners.append(listener)
     }
 
@@ -66,15 +59,4 @@ public class OmniverseMessageDispatcher: @unchecked Sendable {
         }
     }
 
-    private func eventDecoder() async {
-        guard let session = self.session else {
-            Self.logger.error("Message dispatcher's session is not valid, cannot listen to incoming messages from Omniverse!")
-            return
-        }
-        for await message in session.serverMessageStream {
-            await MainActor.run {
-                listeners.forEach({ $0.onMessageReceived(message: message) })
-            }
-        }
-    }
 }
