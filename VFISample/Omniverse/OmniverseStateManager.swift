@@ -14,13 +14,13 @@ public class OmniverseStateManager {
         subsystem: Bundle(for: OmniverseStateManager.self).bundleIdentifier!,
         category: String(describing: OmniverseStateManager.self)
     )
-    
+
     public struct OmniverseState {
         var currentState: (any OmniverseMessageProtocol)? = nil
         var desiredState: any OmniverseMessageProtocol
         var serverNotifiesCompletion: Bool
         var waitingForCompletion: Bool = false
-        
+
         init(_ desiredState: any OmniverseMessageProtocol, serverNotifiesCompletion: Bool) {
             self.desiredState = desiredState
             self.serverNotifiesCompletion = serverNotifiesCompletion
@@ -29,13 +29,13 @@ public class OmniverseStateManager {
     typealias StateDictionary = [String: OmniverseState]
 
     weak var session: Session?
-    var serverListener: Task<Void, Never>? = nil
+    var messageChannel: MessageChannel?
 
     private var stateDict: StateDictionary = [
         "animationAction": .init(AnimationCases.Stop, serverNotifiesCompletion: false),
         "bay": .init(BayInputCases.Bay1, serverNotifiesCompletion: false)
     ]
-    
+
     subscript(_ stateKey: String) -> (any OmniverseMessageProtocol)? {
         get {
             guard let state = stateDict[stateKey] else { return nil }
@@ -53,32 +53,36 @@ public class OmniverseStateManager {
             sync()
         }
     }
-    
+
     public func desiredState(_ key: String) -> any OmniverseMessageProtocol {
         guard let state = stateDict[key] else {
             fatalError("OmniverseStateManager: unknown state key '\(key)'")
         }
         return state.desiredState
     }
-    
+
     public func isAwaitingCompletion(_ stateKey: String) -> Bool {
         guard let state = stateDict[stateKey] else { return false }
         return state.waitingForCompletion
     }
 
+    /// Send data to the server via MessageChannel (preferred) or legacy session path.
+    private func sendData(_ data: Data) {
+        if let channel = messageChannel {
+            _ = channel.sendServerMessage(data)
+        } else {
+            session?.sendServerMessage(data)
+        }
+    }
+
     public func sync() {
-        guard let session = self.session else { return }
-//        if serverListener == nil {
-//            self.serverListener = Task {
-//                await eventDecoder(session)
-//            }
-//        }
+        guard session != nil else { return }
         for (stateName, state) in stateDict {
             var newState = state
             if let currentState = state.currentState, currentState.isEqualTo(state.desiredState) {
                 continue
             } else {
-                session.sendServerMessage(encodeJSON(state.desiredState.encodable))
+                sendData(encodeJSON(state.desiredState.encodable))
                 Self.logger.info("Sending message to server: \(state.desiredState.encodable.message.description)")
                 if state.serverNotifiesCompletion {
                     if state.currentState == nil {
@@ -94,42 +98,15 @@ public class OmniverseStateManager {
             }
         }
     }
-    
+
     public func send(_ message: any OmniverseMessageProtocol) {
-        guard let session = self.session else { return }
+        guard session != nil else { return }
         Self.logger.info("Sending message to server: \(message.encodable.message.description)")
-        session.sendServerMessage(encodeJSON(message.encodable))
+        sendData(encodeJSON(message.encodable))
     }
-    
+
     public func resync() {
         stateDict.forEach { stateDict[$0.0]?.currentState = nil }
         sync()
     }
-    
-//    private func eventDecoder(_ session: Session) async {
-//        for await message in session.serverMessageStream {
-//            print("[JEN] received message in state manager")
-//            if let decodedMessage = try? JSONSerialization.jsonObject(with: message, options: .mutableContainers) as? Dictionary<String, String> {
-//                print("[JEN] Recieving messages here instead of else where")
-//                // ONLY needed for varianttypes
-                
-                
-                // Decode ack messages from omniverse and update the state
-//                if decodedMessage["Type"] == "switchVariantComplete" {
-//                    for (stateName, state) in stateDict {
-//                        if state.serverNotifiesCompletion, state.waitingForCompletion {
-//                            let variantType = state.desiredState.encodable.message["variantSetName"] as? String
-//                            if variantType == decodedMessage["variantSetName"] {
-//                                var newState = state
-//                                newState.currentState = state.desiredState
-//                                newState.waitingForCompletion = false
-//                                stateDict[stateName] = newState
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-    
 }

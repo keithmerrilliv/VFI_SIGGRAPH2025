@@ -115,6 +115,8 @@ class OmniversePrimComponent: Component {
 
     var sendOVTransformationTask: Task<Void, Never>?
     var cameraTransformRequested = false
+    /// Cached MessageChannel for sending — resolved from the session on first use.
+    private var cachedChannel: MessageChannel?
 
     // Origin tracking
     var currentCameraTransform: Transform = .identity
@@ -132,7 +134,10 @@ class OmniversePrimComponent: Component {
             let sessionEntity = CloudXRSessionComponent.findEntityIn(context),
             let cloudXRSessionComponent = sessionEntity.components[CloudXRSessionComponent.self],
             cloudXRSessionComponent.session.state == SessionState.connected
-        else { return }
+        else {
+            cachedChannel = nil
+            return
+        }
         omniversePrimEntities = omniversePrimEntitiesFound
         let session = cloudXRSessionComponent.session
 
@@ -226,6 +231,21 @@ class OmniversePrimComponent: Component {
         }
     }
 
+    /// Send data to the server via the MessageChannel (preferred) or legacy session path.
+    private func sendToServer(_ data: Data, session: Session) {
+        // Resolve/cache the MessageChannel on first use
+        if cachedChannel == nil {
+            if let channelInfo = session.availableMessageChannels.first {
+                cachedChannel = session.getMessageChannel(channelInfo)
+            }
+        }
+        if let channel = cachedChannel {
+            _ = channel.sendServerMessage(data)
+        } else {
+            session.sendServerMessage(data)
+        }
+    }
+
     private func sendPrimPath(session: Session) {
         for entity in omniversePrimEntities {
             guard let component = entity.components[OmniversePrimComponent.self] else {
@@ -235,7 +255,7 @@ class OmniversePrimComponent: Component {
             defer { entity.components[OmniversePrimComponent.self] = component }
             if !component.shapeInfoRequested {
                 Self.logger.info("Requesting prim info for: \(component.primPath)")
-                session.sendServerMessage(encodeJSON(RequestPrimInfoInputEvent(component.primPath)))
+                sendToServer(encodeJSON(RequestPrimInfoInputEvent(component.primPath)), session: session)
                 component.shapeInfoRequested = true
             }
         }
@@ -243,7 +263,7 @@ class OmniversePrimComponent: Component {
         // with the streamed content from the first frame.
         if !cameraTransformRequested {
             Self.logger.info("Requesting camera transform from server")
-            session.sendServerMessage(encodeJSON(RequestCameraTransformEvent()))
+            sendToServer(encodeJSON(RequestCameraTransformEvent()), session: session)
             cameraTransformRequested = true
         }
     }
@@ -494,10 +514,10 @@ class OmniversePrimComponent: Component {
         ) * 100.0
 
         localTransformMatrix.translation = simd_float3(eventPositionX, eventPositionY, eventPositionZ)
-        session.sendServerMessage(encodeJSON(SetPrimTransformationInputEvent(
+        sendToServer(encodeJSON(SetPrimTransformationInputEvent(
             omniversePrimComponent.primPath,
             transformation: localTransformMatrix
-        )))
+        )), session: session)
     }
 
     private static func assignParentChild(omniversePrimEntity: Entity, objectNameAnchorEntities: [String: Entity]) {

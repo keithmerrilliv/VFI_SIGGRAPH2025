@@ -98,6 +98,7 @@ struct ContentView: View {
                             appModel.stateManager.session = session
                             do {
                                 try await session.connect()
+                                await appModel.setupMessageChannel()
                                 appState = .connected
                                 uiPage = .controls
                                 await openImmersiveSpace(id: immersiveTitle)
@@ -109,6 +110,7 @@ struct ContentView: View {
                         }
 
                         if appState == .connected {
+                            appModel.teardownMessageChannel()
                             session.disconnect()
                             appState = .disconnected
                             return

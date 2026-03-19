@@ -15,14 +15,58 @@ let immersiveTitle = "CloudXRImmersive"
 
 @Observable @MainActor
 class AppModel {
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "AppModel",
+        category: "AppModel"
+    )
+
     public var cloudXRSession: CloudXRKit.Session?
 
     public var stateManager: OmniverseStateManager = OmniverseStateManager()
     public static var omniverseMessageDispatcher = OmniverseMessageDispatcher()
 
+    /// The MessageChannel used for all client↔server application messages.
+    public var messageChannel: MessageChannel?
+
     init(cxrSession: Session) {
         self.cloudXRSession = cxrSession
         Self.omniverseMessageDispatcher.session = cxrSession
+    }
+
+    /// After CloudXR connection, wait for the server to announce a message channel,
+    /// then cache it and wire up the dispatcher to its receive stream.
+    func setupMessageChannel() async {
+        guard let session = cloudXRSession else { return }
+
+        // Poll for available channels (server announces them shortly after connect)
+        for _ in 0..<50 {
+            if let channelInfo = session.availableMessageChannels.first,
+               let channel = session.getMessageChannel(channelInfo) {
+                self.messageChannel = channel
+                self.stateManager.messageChannel = channel
+                Self.omniverseMessageDispatcher.messageChannel = channel
+                Self.logger.info("MessageChannel ready (status: \(channel.status.rawValue))")
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        Self.logger.error("No MessageChannel became available after 5 seconds")
+    }
+
+    /// Clean up message channel references on disconnect.
+    func teardownMessageChannel() {
+        messageChannel = nil
+        stateManager.messageChannel = nil
+        Self.omniverseMessageDispatcher.messageChannel = nil
+    }
+
+    /// Send application data to the Omniverse server via the MessageChannel.
+    func sendMessage(_ data: Data) {
+        if let channel = messageChannel {
+            _ = channel.sendServerMessage(data)
+        } else {
+            cloudXRSession?.sendServerMessage(data)
+        }
     }
 }
 
@@ -97,7 +141,7 @@ struct StreamingView: View {
 
                 lastEntityTapped = primEntity
                 Self.logger.info("Sending PrimTap for: '\(primEntity.name)'")
-                appModel.cloudXRSession?.sendServerMessage(encodeJSON(PrimTapInputEvent(primEntity.name)))
+                appModel.sendMessage(encodeJSON(PrimTapInputEvent(primEntity.name)))
             }
     }
 
@@ -115,14 +159,14 @@ struct StreamingView: View {
                 let dy = Float(delta.y) * dragSensitivity
 
                 Self.logger.info("Drag changed: dx=\(dx), dy=\(dy)")
-                appModel.cloudXRSession?.sendServerMessage(
+                appModel.sendMessage(
                     encodeJSON(DragInputEvent(deltaX: dx, deltaY: dy, deltaZ: 0, phase: "changed"))
                 )
             }
             .onEnded { _ in
                 lastDragTranslation = .zero
                 Self.logger.info("Drag ended")
-                appModel.cloudXRSession?.sendServerMessage(
+                appModel.sendMessage(
                     encodeJSON(DragInputEvent(deltaX: 0, deltaY: 0, deltaZ: 0, phase: "ended"))
                 )
             }

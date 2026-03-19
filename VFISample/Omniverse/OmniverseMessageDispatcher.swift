@@ -23,6 +23,7 @@ public class OmniverseMessageDispatcher: @unchecked Sendable {
     )
 
     private var serverListener: Task<Void, Never>?
+    private var channelListener: Task<Void, Never>?
     private var listeners = [OmniverseMessageListener]()
 
     public var session: Session? {
@@ -31,6 +32,26 @@ public class OmniverseMessageDispatcher: @unchecked Sendable {
             self.serverListener = Task {
                 await eventDecoder()
             }
+        }
+    }
+
+    /// Set the MessageChannel to listen on its receivedMessageStream.
+    /// Stops the legacy session listener to avoid duplicate delivery.
+    public var messageChannel: MessageChannel? {
+        didSet {
+            channelListener?.cancel()
+            guard let channel = messageChannel else { return }
+            // Stop the legacy session listener — the channel supersedes it
+            serverListener?.cancel()
+            serverListener = nil
+            self.channelListener = Task {
+                for await message in channel.receivedMessageStream {
+                    await MainActor.run {
+                        listeners.forEach({ $0.onMessageReceived(message: message) })
+                    }
+                }
+            }
+            Self.logger.info("Dispatcher now listening on MessageChannel")
         }
     }
 
