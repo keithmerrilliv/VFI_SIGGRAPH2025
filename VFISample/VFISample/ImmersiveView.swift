@@ -7,6 +7,7 @@
 
 import SwiftUI
 @preconcurrency import RealityKit
+import os.log
 
 @preconcurrency import CloudXRKit
 
@@ -26,6 +27,11 @@ class AppModel {
 }
 
 struct StreamingView: View {
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "StreamingView",
+        category: "StreamingView"
+    )
+
     @Environment(\.openImmersiveSpace) var openImmersiveSpace
     @Environment(AppModel.self) var appModel
 
@@ -38,18 +44,32 @@ struct StreamingView: View {
     @State public var lastEntityTapped : Entity?
 
     // Gesture tracking state
-    @State private var lastDragTranslation: CGSize = .zero
-    @State private var lastMagnification: CGFloat = 1.0
+    @State private var lastDragTranslation: SIMD3<Float> = .zero
 
-    /// Sensitivity: converts points of drag to meters sent to the server.
-    private let metersPerPoint: Float = 0.0005
-    /// Sensitivity: converts magnification delta to meters of camera dolly.
-    private let zoomMetersPerUnit: Float = 0.5
+    /// Sensitivity: converts meters of 3D drag to meters sent to the server.
+    private let dragSensitivity: Float = 2.0
 
     private var tapGesture: some Gesture {
         return SpatialTapGesture()
             .targetedToAnyEntity()
             .onEnded { tappedEntity in
+                let rawEntity = tappedEntity.entity
+                Self.logger.info("Tap detected on entity: '\(rawEntity.name)'")
+
+                // Resolve to the entity that owns OmniversePrimComponent.
+                // The tap may land on the bounding-box child rather than
+                // the prim parent, so walk up one level if needed.
+                let primEntity: Entity
+                if rawEntity.components[OmniversePrimComponent.self] != nil {
+                    primEntity = rawEntity
+                } else if let parent = rawEntity.parent,
+                          parent.components[OmniversePrimComponent.self] != nil {
+                    primEntity = parent
+                } else {
+                    Self.logger.info("Tapped entity has no OmniversePrimComponent — ignoring")
+                    return
+                }
+
                 // Deselect previous entity: remove highlight, hide text
                 if let previousEntity = lastEntityTapped {
                     if !previousEntity.children.isEmpty {
@@ -61,15 +81,9 @@ struct StreamingView: View {
                     }
                 }
 
-                // Select new entity: only act on entities with OmniversePrimComponent
-                let entity = tappedEntity.entity
-                guard entity.components[OmniversePrimComponent.self] != nil ||
-                      entity.parent?.components[OmniversePrimComponent.self] != nil else {
-                    return
-                }
-
-                if !entity.children.isEmpty {
-                    let bbox = entity.children[0]
+                // Select new entity
+                if !primEntity.children.isEmpty {
+                    let bbox = primEntity.children[0]
                     bbox.components.set(HoverEffectComponent(.highlight(
                         HoverEffectComponent.HighlightHoverEffectStyle(
                             color: .green, strength: 15.0
@@ -81,55 +95,44 @@ struct StreamingView: View {
                     }
                 }
 
-                lastEntityTapped = entity
-                appModel.cloudXRSession?.sendServerMessage(encodeJSON(PrimTapInputEvent(entity.name)))
+                lastEntityTapped = primEntity
+                Self.logger.info("Sending PrimTap for: '\(primEntity.name)'")
+                appModel.cloudXRSession?.sendServerMessage(encodeJSON(PrimTapInputEvent(primEntity.name)))
             }
     }
 
     /// Drag gesture for camera orbit / prim translation.
-    /// The server decides the mode based on whether a prim is currently selected.
+    /// Targeted to entities so visionOS delivers events in immersive space.
     private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 10)
+        DragGesture()
+            .targetedToAnyEntity()
             .onChanged { value in
-                let deltaW = Float(value.translation.width - lastDragTranslation.width)
-                let deltaH = Float(value.translation.height - lastDragTranslation.height)
-                lastDragTranslation = value.translation
+                let translation3D = value.convert(value.translation3D, from: .local, to: .scene)
+                let delta = translation3D - lastDragTranslation
+                lastDragTranslation = translation3D
 
-                let dx = deltaW * metersPerPoint
-                let dy = -deltaH * metersPerPoint  // Flip Y: screen down is negative in world
+                let dx = Float(delta.x) * dragSensitivity
+                let dy = Float(delta.y) * dragSensitivity
 
+                Self.logger.info("Drag changed: dx=\(dx), dy=\(dy)")
                 appModel.cloudXRSession?.sendServerMessage(
                     encodeJSON(DragInputEvent(deltaX: dx, deltaY: dy, deltaZ: 0, phase: "changed"))
                 )
             }
             .onEnded { _ in
                 lastDragTranslation = .zero
+                Self.logger.info("Drag ended")
                 appModel.cloudXRSession?.sendServerMessage(
                     encodeJSON(DragInputEvent(deltaX: 0, deltaY: 0, deltaZ: 0, phase: "ended"))
                 )
             }
     }
 
-    /// Pinch-to-zoom gesture — always dollies the camera.
-    private var zoomGesture: some Gesture {
-        MagnifyGesture()
-            .onChanged { value in
-                let delta = Float(value.magnification - lastMagnification)
-                lastMagnification = value.magnification
-
-                let zoomDelta = delta * zoomMetersPerUnit
-
-                appModel.cloudXRSession?.sendServerMessage(
-                    encodeJSON(ZoomInputEvent(delta: zoomDelta, phase: "changed"))
-                )
-            }
-            .onEnded { _ in
-                lastMagnification = 1.0
-                appModel.cloudXRSession?.sendServerMessage(
-                    encodeJSON(ZoomInputEvent(delta: 0, phase: "ended"))
-                )
-            }
-    }
+    // NOTE: MagnifyGesture removed — on visionOS, hand-tracking jitter
+    // causes it to fire continuously on the large gestureTarget sphere,
+    // blocking tap and drag from ever recognizing. Camera zoom can be
+    // driven via the Bay camera UI or a future two-hand gesture on
+    // smaller, prim-specific collision targets.
 
     var body: some View {
 
@@ -143,18 +146,30 @@ struct StreamingView: View {
             cloudXRSessionEntity.transform = .init()
             content.add(cloudXRSessionEntity)
 
+            // No gestureTarget entity — a surrounding sphere always wins the
+            // hit test (user is inside it), and a backdrop plane requires
+            // knowing the scene orientation.  Instead, tap and drag target
+            // the prim entities directly via their collision shapes.
+            //
+            // Each prim needs both InputTargetComponent AND CollisionComponent
+            // for RealityKit hit-testing. The collision shape here is a
+            // placeholder; drawPrimBoundingBox will add a precise shape on
+            // the child entity once the server sends bounding-box data.
             dgxPrim.components[OmniversePrimComponent.self] = OmniversePrimComponent(primPath:"/World/DGX_Tray")
             dgxPrim.components.set(InputTargetComponent(allowedInputTypes: .all))
+            dgxPrim.components.set(CollisionComponent(shapes: [.generateSphere(radius: 1.5)], isStatic: true))
             content.add(dgxPrim)
             sledPrim.components[OmniversePrimComponent.self] = OmniversePrimComponent(primPath:"/World/ProdLine/assembly_ProdLine_V02/V02/V02Machines/Line_SLED/SLED/ASSET/id_LS10RobotArm")
             sledPrim.components.set(InputTargetComponent(allowedInputTypes: .all))
+            sledPrim.components.set(CollisionComponent(shapes: [.generateSphere(radius: 1.5)], isStatic: true))
             content.add(sledPrim)
             lineConveyPrim.components[OmniversePrimComponent.self] = OmniversePrimComponent(primPath:"/World/ProdLine/assembly_ProdLine_V02/V02/V02Machines/Line_Convey/ProductElevatorTowerTypeA_106x150x213_01")
             lineConveyPrim.components.set(InputTargetComponent(allowedInputTypes: .all))
+            lineConveyPrim.components.set(CollisionComponent(shapes: [.generateSphere(radius: 1.5)], isStatic: true))
             content.add(lineConveyPrim)
+
+            Self.logger.info("Gesture setup complete — 3 prims with InputTarget+Collision(r=1.5), no gestureTarget")
         }
-        .gesture(tapGesture)
-        .gesture(dragGesture)
-        .gesture(zoomGesture)
+        .gesture(tapGesture.exclusively(before: dragGesture))
     }
 }

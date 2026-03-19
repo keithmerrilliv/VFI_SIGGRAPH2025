@@ -27,6 +27,12 @@ struct RequestPrimInfoInputEvent: MessageDictionary {
     }
 }
 
+/// Request the current viewport camera transform from the server.
+struct RequestCameraTransformEvent: MessageDictionary {
+    public let message: [String: String] = [:]
+    public let type = "request_camera_transform"
+}
+
 /// Define the prim transformation client event.
 struct SetPrimTransformationInputEvent: MessageDictionary {
     public let message: [String: String]
@@ -108,7 +114,8 @@ class OmniversePrimComponent: Component {
     var omniversePrimEntities: [Entity] = []
 
     var sendOVTransformationTask: Task<Void, Never>?
-    
+    var cameraTransformRequested = false
+
     // Origin tracking
     var currentCameraTransform: Transform = .identity
 
@@ -160,6 +167,7 @@ class OmniversePrimComponent: Component {
                 }
                 if !component.representativeBoxCreated &&
                     component.shapeInfo.boundingBoxSize != simd_float3(0, 0, 0) {
+                    Self.logger.info("Creating representative box for prim: \(component.primPath), size=\(component.shapeInfo.boundingBoxSize)")
                     // Draw the bounding box and assign the parent-child relationship
                     component.representativeBoxCreated = true
                     let primPath = component.primPath
@@ -220,9 +228,17 @@ class OmniversePrimComponent: Component {
             }
             defer { entity.components[OmniversePrimComponent.self] = component }
             if !component.shapeInfoRequested {
+                Self.logger.info("Requesting prim info for: \(component.primPath)")
                 session.sendServerMessage(encodeJSON(RequestPrimInfoInputEvent(component.primPath)))
                 component.shapeInfoRequested = true
             }
+        }
+        // Request camera transform once so bounding boxes can be aligned
+        // with the streamed content from the first frame.
+        if !cameraTransformRequested {
+            Self.logger.info("Requesting camera transform from server")
+            session.sendServerMessage(encodeJSON(RequestCameraTransformEvent()))
+            cameraTransformRequested = true
         }
     }
 
@@ -234,22 +250,36 @@ class OmniversePrimComponent: Component {
         if let decodedMessage = try? JSONSerialization.jsonObject(with: message, options: .mutableContainers) as? [String: Any] {
             let type = decodedMessage["Type"] as? String
             if type == "initial_prims_setup" {
+                Self.logger.info("Received initial_prims_setup from server")
                 guard
                     let boundingBoxMessage = decodedMessage["BoundingBox"] as? String,
                     !boundingBoxMessage.isEmpty
                 else {
+                    Self.logger.warning("initial_prims_setup had empty or missing BoundingBox field")
                     return
                 }
+                Self.logger.info("BoundingBox data: \(boundingBoxMessage.prefix(200))")
                 let boundingBoxString = boundingBoxMessage.split(separator: ";").map { String($0) }
                 let (primPath, primBoundingBox) = OmniversePrimSystem.processBoxShapeInfo(boundingBoxString: boundingBoxString)
+                Self.logger.info("Parsed prim '\(primPath)' bbox size=\(primBoundingBox.boundingBoxSize), pos=\(primBoundingBox.worldPosition)")
                 assignBoxShapeInfo(
                     primPath: primPath,
                     primBoundingBox: primBoundingBox
                 )
             }
-            if type == "pp_camera_transform",
+            // The server sends camera transforms under two message types:
+            //   "pp_camera_transform" — gated on XR mode being enabled
+            //   "camera_transform"    — sent on any camera change
+            // Handle both so bounding boxes stay aligned with the
+            // streamed content regardless of server XR mode.
+            if (type == "pp_camera_transform" || type == "camera_transform"),
                let cameraTransform = decodedMessage["Transform"] as? [Double] {
+                Self.logger.info("Received \(type ?? "") — applying camera transform")
                 let floats = cameraTransform.map { Float($0) }
+                guard floats.count >= 16 else {
+                    Self.logger.warning("Camera transform has \(floats.count) values, expected 16")
+                    return
+                }
                 let matrix = simd_float4x4(
                     simd_float4(floats[0], floats[1], floats[2], floats[3]),
                     simd_float4(floats[4], floats[5], floats[6], floats[7]),
@@ -262,6 +292,7 @@ class OmniversePrimComponent: Component {
                let entityName = decodedMessage["PrimPath"] as? String,
                let metadataName = decodedMessage["MetadataName"] as? String,
                let metadataDescription = decodedMessage["MetadataValue"] as? String {
+                Self.logger.info("PrimTap response for '\(entityName)': \(metadataName)")
                 for entity in omniversePrimEntities {
                     if entity.name == entityName,
                        let component = entity.components[OmniversePrimComponent.self] {
@@ -285,7 +316,6 @@ class OmniversePrimComponent: Component {
                                                                    lineBreakMode: .byWordWrapping)
             let textEntity = ModelEntity(mesh: textMeshResource, materials: [material])
             textEntity.name = "text"
-            textEntity.isEnabled = false
             return textEntity
         }
 
@@ -356,16 +386,18 @@ class OmniversePrimComponent: Component {
         
         var objectBoundingBoxEntity = Entity()
         if usdInteractionVisualizationEnabled {
-            var transparentMaterial = SimpleMaterial()
-            transparentMaterial.triangleFillMode = .lines
-            transparentMaterial.color = SimpleMaterial.BaseColor(tint: .clear)
+            var wireframeMaterial = SimpleMaterial()
+            wireframeMaterial.triangleFillMode = .lines
+            wireframeMaterial.color = SimpleMaterial.BaseColor(
+                tint: UIColor(white: 1.0, alpha: 0.3)
+            )
             objectBoundingBoxEntity = ModelEntity(
                 mesh: .generateBox(
                     width: component.shapeInfo.boundingBoxSize.x,
                     height: component.shapeInfo.boundingBoxSize.y,
                     depth: component.shapeInfo.boundingBoxSize.z
                 ),
-                materials: [transparentMaterial],
+                materials: [wireframeMaterial],
                 collisionShape: .generateBox(
                     width: component.shapeInfo.boundingBoxSize.x,
                     height: component.shapeInfo.boundingBoxSize.y,
@@ -420,11 +452,15 @@ class OmniversePrimComponent: Component {
         let localPosition = inverseTransform * worldPosition
         omniversePrimEntity.addChild(objectBoundingBoxEntity)
         objectBoundingBoxEntity.position = simd_float3(localPosition.x, localPosition.y, localPosition.z)
-        objectBoundingBoxEntity.components.set(InputTargetComponent(allowedInputTypes: .indirect))
+        objectBoundingBoxEntity.components.set(InputTargetComponent(allowedInputTypes: [.indirect, .direct]))
+        objectBoundingBoxEntity.components.set(HoverEffectComponent(.highlight(
+            HoverEffectComponent.HighlightHoverEffectStyle(color: .cyan, strength: 8.0)
+        )))
     }
 
     /// Send the transformation matrix to the server.
     private func sendOVTransformation(omniversePrimEntity: Entity, omniversePrimComponent: OmniversePrimComponent, session: Session) {
+        Self.logger.debug("Sending OV transformation for: \(omniversePrimComponent.primPath)")
         var localTransformMatrix = omniversePrimComponent.localOmniversePrimTransform
         var primOVPosition = omniversePrimComponent.shapeInfo.worldPosition
 
