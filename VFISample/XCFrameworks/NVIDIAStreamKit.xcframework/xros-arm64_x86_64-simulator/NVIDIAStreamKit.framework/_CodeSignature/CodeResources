@@ -6,11 +6,11 @@
 	<dict>
 		<key>Assets.car</key>
 		<data>
-		vTEEpQ6Du4EuzKsplPasuyUMmkE=
+		2pqKMh/0tmo8fJt0Sj+F4kCl/Fc=
 		</data>
 		<key>Headers/NSKAuthMethod.h</key>
 		<data>
-		eY6O7zcoqNXzm6HhP1C7zFva+yw=
+		LwMTQIAXZMCEfQng4qCuzQ90ES0=
 		</data>
 		<key>Headers/NSKAuthMethodGuest.h</key>
 		<data>
@@ -22,7 +22,7 @@
 		</data>
 		<key>Headers/NSKAuthMethodStarfleet.h</key>
 		<data>
-		1hmmJT+F6TaY6bPtxtD8NYcgZeA=
+		/ikyBG9JfgUcWeAvpQzAqCE+Uzo=
 		</data>
 		<key>Headers/NSKBuildInfo.h</key>
 		<data>
@@ -46,11 +46,11 @@
 		</data>
 		<key>Headers/NSKStreamClient.h</key>
 		<data>
-		onVxHmLCW8ctJq/ovlT/JkE6yt8=
+		b0H2hBxhtjCrx9QzVBxFGUgyYII=
 		</data>
 		<key>Headers/NSKStreamConfiguration.h</key>
 		<data>
-		TCIqPUeuysBd1VHmOxm2zrDYkyE=
+		aTzPrDGqes3NVML02uFuJyAv9mQ=
 		</data>
 		<key>Headers/NSKStreamLoadingViewController.h</key>
 		<data>
@@ -62,7 +62,7 @@
 		</data>
 		<key>Headers/NSKStreamStatistics.h</key>
 		<data>
-		wUCa+T8pwfNaerJCbUq1VZP5vYc=
+		xgUI/wvfmXlQhzZuByKrWaiQWiA=
 		</data>
 		<key>Headers/NSKStreamViewController.h</key>
 		<data>
@@ -78,7 +78,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		GbNY3tbt9VHAPfKCOa0WL7/i+0U=
+		Qp33jh9sPdwua1epLWM61HJ1x0I=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -90,7 +90,7 @@
 		</data>
 		<key>NSKImageDB.momd/GFNImageDB.mom</key>
 		<data>
-		j40lcDTLriFaz2nHVSQA54TnNsU=
+		749Njk+8ukKbuvPudx0LNa+pvkY=
 		</data>
 		<key>NSKImageDB.momd/VersionInfo.plist</key>
 		<data>
@@ -102,7 +102,7 @@
 		</data>
 		<key>PrivateHeaders/NSKAudio.h</key>
 		<data>
-		AGiFGi49bay74fhjs1w7cABD4+w=
+		cqOeB3Cydj6r4Y0lJOpbzIYPvcQ=
 		</data>
 		<key>PrivateHeaders/NSKAuthMethodJarvis.h</key>
 		<data>
@@ -174,7 +174,7 @@
 		</data>
 		<key>PrivateHeaders/NSKLogging.h</key>
 		<data>
-		KfELf64FJawe30vXyqCXtbGk0QE=
+		92nZ6VdHIELI4feAX1k1gyidqMQ=
 		</data>
 		<key>PrivateHeaders/NSKPlatformIdentifier.h</key>
 		<data>
@@ -183,6 +183,10 @@
 		<key>PrivateHeaders/NSKReachability.h</key>
 		<data>
 		SXuxgg7aiFQwgIaPLT3123al98U=
+		</data>
+		<key>PrivateHeaders/NSKStreamClient+Audio.h</key>
+		<data>
+		O1VdSJUGNrFweUThlBZEmPTvuis=
 		</data>
 		<key>PrivateHeaders/NSKStreamClient+Input.h</key>
 		<data>
@@ -198,7 +202,7 @@
 		</data>
 		<key>PrivateHeaders/NSKStreamConfigurationPrivate.h</key>
 		<data>
-		cvWFpgHjHgPbEt1AFAElLCDugBA=
+		x5agb3BagYMWQhbeRfZq8kLpsKA=
 		</data>
 		<key>PrivateHeaders/NSKStreamControlView.h</key>
 		<data>
@@ -246,11 +250,11 @@
 		</data>
 		<key>PrivateHeaders/NVIDIAStreamKitPrivate.h</key>
 		<data>
-		y0ShDJez0do2VEuFHVW2RryMfSI=
+		N1UzfzT3zO5QyARF4kkKKBiHaSQ=
 		</data>
 		<key>default.metallib</key>
 		<data>
-		vrDHLzrAVbXj2SNgqcfLaNrOqfw=
+		ZGj6z5EYm23E0SG3rTGqwhc0tI0=
 		</data>
 		<key>en.lproj/Localizable.strings</key>
 		<dict>
@@ -286,14 +290,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			3WA8eJs9P6vxL8yW6bLVv2LT5HCyu7Dm9piCnEW9lB4=
+			CDlRru1RGhXDusvkSo/I4liIqgsBykjUJRmbYZOM9jU=
 			</data>
 		</dict>
 		<key>Headers/NSKAuthMethod.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			juRyWgnO3z/6nvh86hGpJdhguD9/MGbG2VJnTsdeVek=
+			6HNELGnd4pQ0qj9o3lr58zJcH4n/uGpYFoj5wI2jLRI=
 			</data>
 		</dict>
 		<key>Headers/NSKAuthMethodGuest.h</key>
@@ -314,7 +318,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			WhnA62kEh0dOGBHZ+QP5zscinw9CX0zvnbsxzgOwUSM=
+			yuQ8lMGJ/e/CvX8eQwbvaH6PH2GcwMiV6JZ3g1dTd6U=
 			</data>
 		</dict>
 		<key>Headers/NSKBuildInfo.h</key>
@@ -356,14 +360,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			SWr2sZ4cG3NtMw52+46lvu4TwNnipiutWReQ83TbHjM=
+			wbOmXrVNGKTXF9G0CzFIX9KJ6I6Om14bEyyAL2oifEU=
 			</data>
 		</dict>
 		<key>Headers/NSKStreamConfiguration.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			NXDvDBgc6/MvqBYfpgbxrq5O6sZPGNHissmdKbhBZ7o=
+			oCPaQ1bFh/dWUgxC7qlOkQPvQ/mWFY0F27YmtM+39Fw=
 			</data>
 		</dict>
 		<key>Headers/NSKStreamLoadingViewController.h</key>
@@ -384,7 +388,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			kYExcv23dFC8Z56tZODLboMA5uI36Nma1JGD8l3US78=
+			PNchZ18c2heBF7EWksPPqi3K0rur/XUhmzAiymu9Rx4=
 			</data>
 		</dict>
 		<key>Headers/NSKStreamViewController.h</key>
@@ -426,7 +430,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			l5KvChDz1yMRmCgvKu3LoWznPMQZeqSZLwMRjnwg2cY=
+			aKPgB40bYp9zhbmDb3cIB0fmYlbl2h0qfjPV0yKEMAA=
 			</data>
 		</dict>
 		<key>NSKImageDB.momd/VersionInfo.plist</key>
@@ -447,7 +451,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			J6Wf0dF3mWLo8fkbzs0Zl5DpC9ugan9pYhJ+8gIbehg=
+			d/9Z3JsuIn5DovmTUSgQBAcQB7Pp4hbI69pzte1Wp0Q=
 			</data>
 		</dict>
 		<key>PrivateHeaders/NSKAuthMethodJarvis.h</key>
@@ -573,7 +577,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			gP9Zqj3X3IYWqyWSW/MO4jnrxI7r/Wq8QfdARaa8vaU=
+			eIAoEk4tpy9h20eFWMBBJLAJ622DeuQg+lngaJA1EYs=
 			</data>
 		</dict>
 		<key>PrivateHeaders/NSKPlatformIdentifier.h</key>
@@ -588,6 +592,13 @@
 			<key>hash2</key>
 			<data>
 			/hAEu+fPGPr+1HivMCCiTMY2EqNAnvhgFoZjLMBcI8E=
+			</data>
+		</dict>
+		<key>PrivateHeaders/NSKStreamClient+Audio.h</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			oTEVwLw/qk/stMb6KB5oipTUllf4FyBLSUj3qJtpXs4=
 			</data>
 		</dict>
 		<key>PrivateHeaders/NSKStreamClient+Input.h</key>
@@ -615,7 +626,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			YUjf422McJPbi6/bUUR6yw47CrKmF7YIBoCxIeC+N8E=
+			pcgV5b/ttPwefKBViIZFRFnf08WYmg3DPstKvml1NMU=
 			</data>
 		</dict>
 		<key>PrivateHeaders/NSKStreamControlView.h</key>
@@ -699,14 +710,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			XUhXPDWtydR+96HP8YCDwIHipTCOPbLb5cqTUoGuC6k=
+			BWFXRGwmoRs4CgpYfSKAn3zeBrWVcbp1jZjI+yNnd4s=
 			</data>
 		</dict>
 		<key>default.metallib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			/QAoEiIZRaTcIDnQLQRsNaVZwHOfh+Yrj8cpvv/hq9Q=
+			CRs7kK4cBwbo38xTOHRf+K8OKVams3zQ+LkrCnwKd6o=
 			</data>
 		</dict>
 		<key>en.lproj/Localizable.strings</key>

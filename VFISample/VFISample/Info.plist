@@ -4,5 +4,7 @@
 <dict>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<key>NSSupportsGroupActivities</key>
+	<true/>
 </dict>
 </plist>

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -12,13 +12,21 @@
 		1ED6F00D2D5EBD6800D5D22D /* OmniversePrimSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED6F00C2D5EBD6800D5D22D /* OmniversePrimSystem.swift */; };
 		1ED6F00F2D5EBD8300D5D22D /* OmniverseMessageDispatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED6F00E2D5EBD8300D5D22D /* OmniverseMessageDispatcher.swift */; };
 		1ED6F0112D5EBDD200D5D22D /* MessageProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED6F0102D5EBDD200D5D22D /* MessageProtocol.swift */; };
-		3C3C580B2D712BA900479329 /* CloudXRKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3C3C580A2D712BA900479329 /* CloudXRKit */; };
 		823DF31D2C7F955900B420DB /* CleansheetCloudXRClientApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823DF31C2C7F955900B420DB /* CleansheetCloudXRClientApp.swift */; };
 		823DF31F2C7F955900B420DB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823DF31E2C7F955900B420DB /* ContentView.swift */; };
 		823DF3212C7F955900B420DB /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823DF3202C7F955900B420DB /* ImmersiveView.swift */; };
 		823DF3232C7F955A00B420DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 823DF3222C7F955A00B420DB /* Assets.xcassets */; };
 		823DF3262C7F955A00B420DB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 823DF3252C7F955A00B420DB /* Preview Assets.xcassets */; };
 		823DF3312C7F955A00B420DB /* CleansheetCloudXRClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823DF3302C7F955A00B420DB /* CleansheetCloudXRClientTests.swift */; };
+		AA0001062D8A000100000006 /* SharePlayMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012D8A000100000001 /* SharePlayMessages.swift */; };
+		AA0001072D8A000100000007 /* SharedModelActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001022D8A000100000002 /* SharedModelActivity.swift */; };
+		AA0001082D8A000100000008 /* SharePlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001032D8A000100000003 /* SharePlayManager.swift */; };
+		BB0001042D8B000100000004 /* CloudXRKit.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB0001012D8B000100000001 /* CloudXRKit.xcframework */; };
+		BB0001052D8B000100000005 /* NVIDIAStreamKit.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB0001022D8B000100000002 /* NVIDIAStreamKit.xcframework */; };
+		BB0001062D8B000100000006 /* NVTelemetry.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB0001032D8B000100000003 /* NVTelemetry.xcframework */; };
+		BB0001072D8B000100000007 /* CloudXRKit.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BB0001012D8B000100000001 /* CloudXRKit.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BB0001082D8B000100000008 /* NVIDIAStreamKit.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BB0001022D8B000100000002 /* NVIDIAStreamKit.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BB0001092D8B000100000009 /* NVTelemetry.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BB0001032D8B000100000003 /* NVTelemetry.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +38,22 @@
 			remoteInfo = CleansheetCloudXRClient;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BB00010A2D8B00010000000A /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				BB0001072D8B000100000007 /* CloudXRKit.xcframework in Embed Frameworks */,
+				BB0001082D8B000100000008 /* NVIDIAStreamKit.xcframework in Embed Frameworks */,
+				BB0001092D8B000100000009 /* NVTelemetry.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1E78A60A2CAB416E0060302E /* OmniverseStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmniverseStateManager.swift; sourceTree = "<group>"; };
@@ -46,6 +70,13 @@
 		823DF3272C7F955A00B420DB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		823DF32C2C7F955A00B420DB /* CleansheetCloudXRClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CleansheetCloudXRClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		823DF3302C7F955A00B420DB /* CleansheetCloudXRClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleansheetCloudXRClientTests.swift; sourceTree = "<group>"; };
+		AA0001012D8A000100000001 /* SharePlayMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharePlayMessages.swift; sourceTree = "<group>"; };
+		AA0001022D8A000100000002 /* SharedModelActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModelActivity.swift; sourceTree = "<group>"; };
+		AA0001032D8A000100000003 /* SharePlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharePlayManager.swift; sourceTree = "<group>"; };
+		AA0001042D8A000100000004 /* VFISample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VFISample.entitlements; sourceTree = "<group>"; };
+		BB0001012D8B000100000001 /* CloudXRKit.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:6KR3T733EC:NVIDIA Corporation"; lastKnownFileType = wrapper.xcframework; path = CloudXRKit.xcframework; sourceTree = "<group>"; };
+		BB0001022D8B000100000002 /* NVIDIAStreamKit.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:6KR3T733EC:NVIDIA Corporation"; lastKnownFileType = wrapper.xcframework; path = NVIDIAStreamKit.xcframework; sourceTree = "<group>"; };
+		BB0001032D8B000100000003 /* NVTelemetry.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:6KR3T733EC:NVIDIA Corporation"; lastKnownFileType = wrapper.xcframework; path = NVTelemetry.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,7 +84,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3C3C580B2D712BA900479329 /* CloudXRKit in Frameworks */,
+				BB0001042D8B000100000004 /* CloudXRKit.xcframework in Frameworks */,
+				BB0001052D8B000100000005 /* NVIDIAStreamKit.xcframework in Frameworks */,
+				BB0001062D8B000100000006 /* NVTelemetry.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,8 +138,10 @@
 				823DF31C2C7F955900B420DB /* CleansheetCloudXRClientApp.swift */,
 				823DF31E2C7F955900B420DB /* ContentView.swift */,
 				823DF3202C7F955900B420DB /* ImmersiveView.swift */,
+				AA0001052D8A000100000005 /* SharePlay */,
 				823DF3222C7F955A00B420DB /* Assets.xcassets */,
 				823DF3272C7F955A00B420DB /* Info.plist */,
+				AA0001042D8A000100000004 /* VFISample.entitlements */,
 				823DF3242C7F955A00B420DB /* Preview Content */,
 			);
 			path = VFISample;
@@ -131,8 +166,22 @@
 		82E6DA062C80C0E2004E376D /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BB0001012D8B000100000001 /* CloudXRKit.xcframework */,
+				BB0001022D8B000100000002 /* NVIDIAStreamKit.xcframework */,
+				BB0001032D8B000100000003 /* NVTelemetry.xcframework */,
 			);
 			name = Frameworks;
+			path = XCFrameworks;
+			sourceTree = "<group>";
+		};
+		AA0001052D8A000100000005 /* SharePlay */ = {
+			isa = PBXGroup;
+			children = (
+				AA0001012D8A000100000001 /* SharePlayMessages.swift */,
+				AA0001022D8A000100000002 /* SharedModelActivity.swift */,
+				AA0001032D8A000100000003 /* SharePlayManager.swift */,
+			);
+			path = SharePlay;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -145,15 +194,13 @@
 				823DF3112C7F955900B420DB /* Sources */,
 				823DF3122C7F955900B420DB /* Frameworks */,
 				823DF3132C7F955900B420DB /* Resources */,
+				BB00010A2D8B00010000000A /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = VFISample;
-			packageProductDependencies = (
-				3C3C580A2D712BA900479329 /* CloudXRKit */,
-			);
 			productName = CleansheetCloudXRClient;
 			productReference = 823DF3152C7F955900B420DB /* VFISample.app */;
 			productType = "com.apple.product-type.application";
@@ -204,9 +251,6 @@
 				Base,
 			);
 			mainGroup = 823DF30C2C7F955900B420DB;
-			packageReferences = (
-				3C3C58092D712AAA00479329 /* XCRemoteSwiftPackageReference "cloudxr-framework" */,
-			);
 			productRefGroup = 823DF3162C7F955900B420DB /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -249,6 +293,9 @@
 				823DF3212C7F955900B420DB /* ImmersiveView.swift in Sources */,
 				1ED6F00F2D5EBD8300D5D22D /* OmniverseMessageDispatcher.swift in Sources */,
 				1ED6F00D2D5EBD6800D5D22D /* OmniversePrimSystem.swift in Sources */,
+				AA0001062D8A000100000006 /* SharePlayMessages.swift in Sources */,
+				AA0001072D8A000100000007 /* SharedModelActivity.swift in Sources */,
+				AA0001082D8A000100000008 /* SharePlayManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -310,7 +357,7 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				FRAMEWORK_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/XCFrameworks";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -375,7 +422,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				FRAMEWORK_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/XCFrameworks";
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -399,6 +446,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = Futurama;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = VFISample/VFISample.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"VFISample/Preview Content\"";
@@ -427,6 +475,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = Futurama;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = VFISample/VFISample.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"VFISample/Preview Content\"";
@@ -519,25 +568,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		3C3C58092D712AAA00479329 /* XCRemoteSwiftPackageReference "cloudxr-framework" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/NVIDIA/cloudxr-framework";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 6.0.2;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		3C3C580A2D712BA900479329 /* CloudXRKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3C3C58092D712AAA00479329 /* XCRemoteSwiftPackageReference "cloudxr-framework" */;
-			productName = CloudXRKit;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 823DF30D2C7F955900B420DB /* Project object */;
 }

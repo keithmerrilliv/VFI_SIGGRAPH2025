@@ -1,6 +1,0 @@
-framework module NVIDIAStreamKit {
-  umbrella header "NVIDIAStreamKit.h"
-  export *
-
-  module * { export * }
-}
