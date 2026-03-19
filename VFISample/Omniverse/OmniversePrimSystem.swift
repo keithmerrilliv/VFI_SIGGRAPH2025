@@ -195,6 +195,12 @@ class OmniversePrimComponent: Component {
                         component.latestCameraTransform = currentCameraTransform
                         // Apply the camera transform after the update.
                         entity.transform.matrix = component.latestCameraTransform.matrix.inverse * entity.transform.matrix
+
+                        // Log final world position once per camera change (first entity only)
+                        if entity.name.contains("DGX") {
+                            let worldPos = entity.position(relativeTo: nil)
+                            Self.logger.info("DGX bbox world pos after camera xform: \(worldPos)")
+                        }
                     }
 
                     component.localOmniversePrimTransform.matrix = component.latestCameraTransform.matrix * entity.transform.matrix
@@ -389,7 +395,7 @@ class OmniversePrimComponent: Component {
             var wireframeMaterial = SimpleMaterial()
             wireframeMaterial.triangleFillMode = .lines
             wireframeMaterial.color = SimpleMaterial.BaseColor(
-                tint: UIColor(white: 1.0, alpha: 0.3)
+                tint: UIColor(red: 0, green: 1, blue: 0, alpha: 1.0)
             )
             objectBoundingBoxEntity = ModelEntity(
                 mesh: .generateBox(
