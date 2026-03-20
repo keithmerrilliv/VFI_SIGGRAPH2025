@@ -360,6 +360,7 @@ class OmniversePrimComponent: Component {
     public func onMessageReceived(message: Data) {
         if let decodedMessage = try? JSONSerialization.jsonObject(with: message, options: .mutableContainers) as? [String: Any] {
             let type = decodedMessage["Type"] as? String
+            Self.logger.debug("Message received: type=\(type ?? "nil")")
             if type == "discovered_prims",
                let primPaths = decodedMessage["PrimPaths"] as? [String] {
                 Self.logger.info("Discovered \(primPaths.count) prims from server")
