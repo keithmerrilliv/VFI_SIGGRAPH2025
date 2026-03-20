@@ -81,10 +81,6 @@ struct StreamingView: View {
 
     @State private var cloudXRSessionEntity = Entity()
 
-    // PRIMS
-    @State private var dgxPrim = Entity()
-    @State private var sledPrim = Entity()
-    @State private var lineConveyPrim = Entity()
     @State public var lastEntityTapped : Entity?
 
     // Gesture tracking state
@@ -190,29 +186,9 @@ struct StreamingView: View {
             cloudXRSessionEntity.transform = .init()
             content.add(cloudXRSessionEntity)
 
-            // No gestureTarget entity — a surrounding sphere always wins the
-            // hit test (user is inside it), and a backdrop plane requires
-            // knowing the scene orientation.  Instead, tap and drag target
-            // the prim entities directly via their collision shapes.
-            //
-            // Each prim needs both InputTargetComponent AND CollisionComponent
-            // for RealityKit hit-testing. The collision shape here is a
-            // placeholder; drawPrimBoundingBox will add a precise shape on
-            // the child entity once the server sends bounding-box data.
-            dgxPrim.components[OmniversePrimComponent.self] = OmniversePrimComponent(primPath:"/World/DGX_Tray")
-            dgxPrim.components.set(InputTargetComponent(allowedInputTypes: .all))
-            dgxPrim.components.set(CollisionComponent(shapes: [.generateSphere(radius: 1.5)], isStatic: true))
-            content.add(dgxPrim)
-            sledPrim.components[OmniversePrimComponent.self] = OmniversePrimComponent(primPath:"/World/ProdLine/assembly_ProdLine_V02/V02/V02Machines/Line_SLED/SLED/ASSET/id_LS10RobotArm")
-            sledPrim.components.set(InputTargetComponent(allowedInputTypes: .all))
-            sledPrim.components.set(CollisionComponent(shapes: [.generateSphere(radius: 1.5)], isStatic: true))
-            content.add(sledPrim)
-            lineConveyPrim.components[OmniversePrimComponent.self] = OmniversePrimComponent(primPath:"/World/ProdLine/assembly_ProdLine_V02/V02/V02Machines/Line_Convey/ProductElevatorTowerTypeA_106x150x213_01")
-            lineConveyPrim.components.set(InputTargetComponent(allowedInputTypes: .all))
-            lineConveyPrim.components.set(CollisionComponent(shapes: [.generateSphere(radius: 1.5)], isStatic: true))
-            content.add(lineConveyPrim)
-
-            Self.logger.info("Gesture setup complete — 3 prims with InputTarget+Collision(r=1.5), no gestureTarget")
+            // Prim entities are created dynamically when the server responds
+            // to the discover_prims request (handled by OmniversePrimSystem).
+            Self.logger.info("Session entity added — prims will be discovered from server")
         }
         .gesture(tapGesture.exclusively(before: dragGesture))
     }

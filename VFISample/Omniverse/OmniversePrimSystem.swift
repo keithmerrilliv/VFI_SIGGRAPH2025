@@ -116,6 +116,10 @@ class OmniversePrimComponent: Component {
 
     var sendOVTransformationTask: Task<Void, Never>?
     var cameraTransformRequested = false
+    var primsDiscoveryRequested = false
+    /// Prim paths received from the server's discover_prims response.
+    /// Processed in the update loop where we have scene context.
+    var discoveredPrimPaths: [String] = []
     /// Cached MessageChannel for sending — resolved from the session on first use.
     private var cachedChannel: MessageChannel?
 
@@ -154,8 +158,20 @@ class OmniversePrimComponent: Component {
         omniversePrimEntities = omniversePrimEntitiesFound
         let session = cloudXRSessionComponent.session
 
+        // Create entities for any newly discovered prims
+        if !discoveredPrimPaths.isEmpty {
+            if let contentRoot = sessionEntity.parent {
+                for path in discoveredPrimPaths {
+                    createPrimEntity(primPath: path, context: contentRoot)
+                }
+            }
+            discoveredPrimPaths.removeAll()
+        }
+
+        // Always try to send discovery/prim requests (even if no prims exist yet)
+        sendPrimPath(session: session)
+
         if !omniversePrimEntities.isEmpty {
-            sendPrimPath(session: session)
 
             for entity in omniversePrimEntities {
                 guard let component = entity.components[OmniversePrimComponent.self] else {
@@ -221,8 +237,8 @@ class OmniversePrimComponent: Component {
                         applyPrimPosition(entity: entity, component: component)
                     }
 
-                    // Convert back to Omniverse Z-up for server comparison (drag)
-                    component.localOmniversePrimTransform.matrix = zUpToYUp.inverse * bayCameraTransform * entity.transform.matrix
+                    // Server expects Y-up positions (it handles Y-up→Z-up internally)
+                    component.localOmniversePrimTransform = entity.transform
 
                     // Send an update to OV if we are not in sync.
                     if component.remoteOmniversePrimTransform != component.localOmniversePrimTransform {
@@ -264,9 +280,8 @@ class OmniversePrimComponent: Component {
     /// "viewer standing position" in the factory. Head tracking (via
     /// RealityKit + CloudXRKit) handles the viewing direction.
     private func applyPrimPosition(entity: Entity, component: OmniversePrimComponent) {
-        // Convert prim from Z-up to Y-up
-        let primYup = zUpToYUp * SIMD4<Float>(component.shapeInfo.worldPosition, 1.0)
-        let primPos = simd_float3(primYup.x, primYup.y, primYup.z)
+        // Positions from server are already Y-up (server converts Z-up→Y-up)
+        let primPos = component.shapeInfo.worldPosition
 
         // Camera position in Y-up (from server, already converted)
         let camPos = simd_float3(bayCameraTransform.columns.3.x, bayCameraTransform.columns.3.y, bayCameraTransform.columns.3.z)
@@ -277,31 +292,28 @@ class OmniversePrimComponent: Component {
         let rotated = cameraYawCorrection * SIMD4<Float>(offset, 0)
         entity.position = simd_float3(rotated.x, rotated.y, rotated.z)
 
-        // Bbox child position (same pipeline)
+        // Bbox child position (also already Y-up from server)
         if !entity.children.isEmpty {
-            let bboxYup = zUpToYUp * SIMD4<Float>(component.shapeInfo.boundingBoxCenter, 1.0)
-            let bboxOffset = simd_float3(bboxYup.x, bboxYup.y, bboxYup.z) - camPos
+            let bboxOffset = component.shapeInfo.boundingBoxCenter - camPos
             let bboxRotated = cameraYawCorrection * SIMD4<Float>(bboxOffset, 0)
             entity.children[0].position = simd_float3(bboxRotated.x, bboxRotated.y, bboxRotated.z) - entity.position
         }
 
         component.lastAppliedCameraTranslation = camPos
 
-        // Diagnostic: show full pipeline for calibration
-        if entity.name.contains("DGX") {
-            let rawZup = component.shapeInfo.worldPosition
-            Self.logger.info("""
-                [DIAG] DGX positioning pipeline:
-                  raw Z-up:    \(rawZup)
-                  Y-up:        \(primPos)
-                  camera Y-up: \(camPos)
-                  entity pos:  \(entity.position)
-                  camera fwd:  col2=(\(self.bayCameraTransform.columns.2.x), \(self.bayCameraTransform.columns.2.y), \(self.bayCameraTransform.columns.2.z))
-                """)
-        }
+        Self.logger.info("[DIAG] '\(entity.name)': serverYup=\(primPos) cam=\(camPos) offset=\(offset) final=\(entity.position)")
     }
 
     private func sendPrimPath(session: Session) {
+        // Discover prims from the server (once)
+        if !primsDiscoveryRequested {
+            Self.logger.info("Requesting prim discovery from server")
+            if sendToServer(encodeJSON(DiscoverPrimsEvent()), session: session) {
+                primsDiscoveryRequested = true
+            }
+        }
+
+        // Request bbox info for any prims that have been created but not yet queried
         for entity in omniversePrimEntities {
             guard let component = entity.components[OmniversePrimComponent.self] else {
                 Self.logger.error("Missing omniverse prim componenent.")
@@ -315,14 +327,30 @@ class OmniversePrimComponent: Component {
                 }
             }
         }
-        // Request camera transform once so bounding boxes can be aligned
-        // with the streamed content from the first frame.
+
+        // Request camera transform once
         if !cameraTransformRequested {
             Self.logger.info("Requesting camera transform from server")
             if sendToServer(encodeJSON(RequestCameraTransformEvent()), session: session) {
                 cameraTransformRequested = true
             }
         }
+    }
+
+    /// Create a prim entity dynamically for a discovered prim path.
+    /// The entity gets placeholder collision for hit testing; the real
+    /// bbox shape is set when the server responds with bbox data.
+    private func createPrimEntity(primPath: String, context: Entity) {
+        // Don't create duplicates
+        guard objectNameAnchorEntities[primPath] == nil else { return }
+
+        let entity = Entity()
+        entity.components[OmniversePrimComponent.self] = OmniversePrimComponent(primPath: primPath)
+        entity.components.set(InputTargetComponent(allowedInputTypes: .all))
+        entity.components.set(CollisionComponent(shapes: [.generateSphere(radius: 1.5)], isStatic: true))
+        context.addChild(entity)
+
+        Self.logger.info("Created prim entity for discovered path: \(primPath)")
     }
 
     func attachOmniverseMessageDispatcher(dispatcher: OmniverseMessageDispatcher) {
@@ -332,6 +360,16 @@ class OmniversePrimComponent: Component {
     public func onMessageReceived(message: Data) {
         if let decodedMessage = try? JSONSerialization.jsonObject(with: message, options: .mutableContainers) as? [String: Any] {
             let type = decodedMessage["Type"] as? String
+            if type == "discovered_prims",
+               let primPaths = decodedMessage["PrimPaths"] as? [String] {
+                Self.logger.info("Discovered \(primPaths.count) prims from server")
+                // Store paths — entities will be created in the next update() cycle
+                // when we have access to the scene context
+                for path in primPaths {
+                    discoveredPrimPaths.append(path)
+                    Self.logger.info("  - \(path)")
+                }
+            }
             if type == "initial_prims_setup" {
                 Self.logger.info("Received initial_prims_setup from server")
                 guard

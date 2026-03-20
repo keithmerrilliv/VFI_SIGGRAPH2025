@@ -105,6 +105,12 @@ public enum BayInputCases: String, CaseIterable, Identifiable, Equatable, Omnive
     public var encodable: any EncodableInputEvent { BayInputEvent(self) }
 }
 
+/// Request the server to discover interactive prims in the scene.
+struct DiscoverPrimsEvent: MessageDictionary {
+    public let message: [String: String] = [:]
+    public let type = "discover_prims"
+}
+
 struct PrimTapInputEvent: MessageDictionary {
     public let message: [String: String]
     public let type = "PrimTap"
