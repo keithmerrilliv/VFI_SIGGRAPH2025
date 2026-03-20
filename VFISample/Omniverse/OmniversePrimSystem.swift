@@ -121,13 +121,18 @@ class OmniversePrimComponent: Component {
 
     // Origin tracking
     var currentCameraTransform: Transform = .identity
-    /// The first camera transform's rotation — used for Z-up→Y-up coordinate
-    /// conversion. Head tracking rotation changes are ignored (RealityKit
-    /// handles them automatically for world-space entities).
-    var coordinateConversion: simd_float4x4?
-    /// The full camera world transform (Y-up). Its inverse is used to convert
-    /// prim world positions to camera-relative positions.
-    var cameraWorldTransform: simd_float4x4 = matrix_identity_float4x4
+    /// Fixed Z-up → Y-up coordinate conversion: (x, y, z) → (x, z, -y).
+    let zUpToYUp = simd_float4x4(
+        simd_float4(1, 0, 0, 0),
+        simd_float4(0, 0, -1, 0),
+        simd_float4(0, 1, 0, 0),
+        simd_float4(0, 0, 0, 1)
+    )
+    /// The bay camera's full world transform in Y-up (from server).
+    var bayCameraTransform: simd_float4x4 = matrix_identity_float4x4
+    /// Y-axis rotation that aligns the camera's forward direction with
+    /// RealityKit's forward (-Z). Extracted from the camera transform.
+    var cameraYawCorrection: simd_float4x4 = matrix_identity_float4x4
 
     required init(scene: RealityKit.Scene) {
         attachOmniverseMessageDispatcher(dispatcher: AppModel.omniverseMessageDispatcher)
@@ -210,17 +215,14 @@ class OmniversePrimComponent: Component {
                         sendOVTransformationTask == nil
                     else { continue }
                     
-                    // Update position if camera changed (bay switch).
-                    let camTranslation = simd_float3(cameraWorldTransform.columns.3.x, cameraWorldTransform.columns.3.y, cameraWorldTransform.columns.3.z)
-                    if component.lastAppliedCameraTranslation != camTranslation {
+                    // Update position if bay camera changed.
+                    let camPos = simd_float3(bayCameraTransform.columns.3.x, bayCameraTransform.columns.3.y, bayCameraTransform.columns.3.z)
+                    if component.lastAppliedCameraTranslation != camPos {
                         applyPrimPosition(entity: entity, component: component)
                     }
 
-                    // Convert back to Omniverse Z-up space for server comparison (drag)
-                    if let conv = coordinateConversion {
-                        let inverseViewMatrix = simd_float4x4(conv).inverse * cameraWorldTransform
-                        component.localOmniversePrimTransform.matrix = inverseViewMatrix * entity.transform.matrix
-                    }
+                    // Convert back to Omniverse Z-up for server comparison (drag)
+                    component.localOmniversePrimTransform.matrix = zUpToYUp.inverse * bayCameraTransform * entity.transform.matrix
 
                     // Send an update to OV if we are not in sync.
                     if component.remoteOmniversePrimTransform != component.localOmniversePrimTransform {
@@ -258,28 +260,45 @@ class OmniversePrimComponent: Component {
     }
 
     /// Position a prim entity in RealityKit world space.
-    /// Pipeline: Z-up position → Y-up (coordinateConversion) → camera-relative (view matrix).
-    /// Only POSITION is transformed — orientation stays identity so bboxes stay axis-aligned.
+    /// Decoupled from camera rotation — uses camera position only as the
+    /// "viewer standing position" in the factory. Head tracking (via
+    /// RealityKit + CloudXRKit) handles the viewing direction.
     private func applyPrimPosition(entity: Entity, component: OmniversePrimComponent) {
-        guard let conv = coordinateConversion else { return }
+        // Convert prim from Z-up to Y-up
+        let primYup = zUpToYUp * SIMD4<Float>(component.shapeInfo.worldPosition, 1.0)
+        let primPos = simd_float3(primYup.x, primYup.y, primYup.z)
 
-        // Step 1: Convert from Omniverse Z-up to Y-up
-        // Step 2: Apply camera view matrix (inverse of camera world transform) for
-        //         camera-relative positioning (handles bay camera position + direction)
-        let viewMatrix = cameraWorldTransform.inverse * conv
+        // Camera position in Y-up (from server, already converted)
+        let camPos = simd_float3(bayCameraTransform.columns.3.x, bayCameraTransform.columns.3.y, bayCameraTransform.columns.3.z)
 
-        let primPos = SIMD4<Float>(component.shapeInfo.worldPosition, 1.0)
-        let viewPos = viewMatrix * primPos
-        entity.position = simd_float3(viewPos.x, viewPos.y, viewPos.z)
+        // Position relative to camera, rotated by camera yaw so
+        // "in front of camera" aligns with "in front of user" (-Z)
+        let offset = primPos - camPos
+        let rotated = cameraYawCorrection * SIMD4<Float>(offset, 0)
+        entity.position = simd_float3(rotated.x, rotated.y, rotated.z)
 
-        // Convert bbox child position with same pipeline
+        // Bbox child position (same pipeline)
         if !entity.children.isEmpty {
-            let bboxCenter = SIMD4<Float>(component.shapeInfo.boundingBoxCenter, 1.0)
-            let bboxViewPos = viewMatrix * bboxCenter
-            entity.children[0].position = simd_float3(bboxViewPos.x, bboxViewPos.y, bboxViewPos.z) - entity.position
+            let bboxYup = zUpToYUp * SIMD4<Float>(component.shapeInfo.boundingBoxCenter, 1.0)
+            let bboxOffset = simd_float3(bboxYup.x, bboxYup.y, bboxYup.z) - camPos
+            let bboxRotated = cameraYawCorrection * SIMD4<Float>(bboxOffset, 0)
+            entity.children[0].position = simd_float3(bboxRotated.x, bboxRotated.y, bboxRotated.z) - entity.position
         }
 
-        component.lastAppliedCameraTranslation = simd_float3(cameraWorldTransform.columns.3.x, cameraWorldTransform.columns.3.y, cameraWorldTransform.columns.3.z)
+        component.lastAppliedCameraTranslation = camPos
+
+        // Diagnostic: show full pipeline for calibration
+        if entity.name.contains("DGX") {
+            let rawZup = component.shapeInfo.worldPosition
+            Self.logger.info("""
+                [DIAG] DGX positioning pipeline:
+                  raw Z-up:    \(rawZup)
+                  Y-up:        \(primPos)
+                  camera Y-up: \(camPos)
+                  entity pos:  \(entity.position)
+                  camera fwd:  col2=(\(self.bayCameraTransform.columns.2.x), \(self.bayCameraTransform.columns.2.y), \(self.bayCameraTransform.columns.2.z))
+                """)
+        }
     }
 
     private func sendPrimPath(session: Session) {
@@ -354,29 +373,33 @@ class OmniversePrimComponent: Component {
                     simd_float4(floats[12], floats[13], floats[14], floats[15])
                 )
                 currentCameraTransform = .init(matrix: matrix)
-                // Capture the first camera transform's rotation as the coordinate
-                // conversion (Z-up → Y-up).
-                if coordinateConversion == nil {
-                    // Extract just the rotation (zero out translation)
-                    var rotOnly = matrix
-                    rotOnly.columns.3 = simd_float4(0, 0, 0, 1)
-                    coordinateConversion = rotOnly
-                    Self.logger.info("[DIAG] Captured coordinate conversion matrix")
-                }
-                // Store the full camera world transform for view matrix computation.
-                // Update on:
-                //   1. First non-zero transform (initial bay camera position)
-                //   2. Bay switches (translation moves > 1m)
-                // Ignore: head tracking (small continuous translation changes)
-                let newTranslation = simd_float3(matrix.columns.3.x, matrix.columns.3.y, matrix.columns.3.z)
-                let oldTranslation = simd_float3(self.cameraWorldTransform.columns.3.x, self.cameraWorldTransform.columns.3.y, self.cameraWorldTransform.columns.3.z)
-                let distanceMoved = length(newTranslation - oldTranslation)
-                let isFirstBayCamera = (length(oldTranslation) < 0.001 && length(newTranslation) > 0.001)
-                let isBaySwitch = distanceMoved > 1.0
 
-                if isFirstBayCamera || isBaySwitch {
-                    Self.logger.info("[DIAG] Bay camera changed: \(oldTranslation) → \(newTranslation) (dist=\(distanceMoved))")
-                    self.cameraWorldTransform = matrix
+                // Store the full camera world transform on bay switches.
+                // Only update when non-zero translation that moved > 1m.
+                // Head tracking sends zero-translation or small drift — ignored.
+                let newPos = simd_float3(matrix.columns.3.x, matrix.columns.3.y, matrix.columns.3.z)
+                let oldPos = simd_float3(self.bayCameraTransform.columns.3.x, self.bayCameraTransform.columns.3.y, self.bayCameraTransform.columns.3.z)
+                let isNonZero = length(newPos) > 0.5
+                let distanceMoved = length(newPos - oldPos)
+
+                if isNonZero && distanceMoved > 1.0 {
+                    Self.logger.info("[DIAG] Bay camera: \(oldPos) → \(newPos) (dist=\(distanceMoved))")
+                    self.bayCameraTransform = matrix
+
+                    // Compute yaw correction: rotate camera's forward to RealityKit's -Z.
+                    // Camera forward = -col2 projected onto XZ plane.
+                    let camZ = simd_float3(matrix.columns.2.x, 0, matrix.columns.2.z)
+                    let camForward = -normalize(camZ) // camera looks along -Z_camera
+                    // RealityKit forward = (0, 0, -1)
+                    // Yaw angle = atan2 of camera forward in XZ
+                    let yaw = atan2(camForward.x, camForward.z) - atan2(Float(0), Float(-1))
+                    self.cameraYawCorrection = simd_float4x4(
+                        simd_float4(cos(yaw), 0, sin(yaw), 0),
+                        simd_float4(0, 1, 0, 0),
+                        simd_float4(-sin(yaw), 0, cos(yaw), 0),
+                        simd_float4(0, 0, 0, 1)
+                    )
+                    Self.logger.info("[DIAG] Camera yaw correction: \(yaw * 180 / .pi)°")
                 }
             }
             if type == "PrimTap",
