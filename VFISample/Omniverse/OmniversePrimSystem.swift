@@ -384,10 +384,17 @@ class OmniversePrimComponent: Component {
                 let boundingBoxString = boundingBoxMessage.split(separator: ";").map { String($0) }
                 let (primPath, primBoundingBox) = OmniversePrimSystem.processBoxShapeInfo(boundingBoxString: boundingBoxString)
                 Self.logger.info("Parsed prim '\(primPath)' bbox size=\(primBoundingBox.boundingBoxSize), pos=\(primBoundingBox.worldPosition)")
-                assignBoxShapeInfo(
-                    primPath: primPath,
-                    primBoundingBox: primBoundingBox
-                )
+
+                // Create entity dynamically if one doesn't exist for this path
+                let hasEntity = omniversePrimEntities.contains { entity in
+                    entity.components[OmniversePrimComponent.self]?.primPath == primPath
+                }
+                if !hasEntity && !primPath.isEmpty {
+                    discoveredPrimPaths.append(primPath)
+                    Self.logger.info("Will create entity for new prim: \(primPath)")
+                }
+
+                assignBoxShapeInfo(primPath: primPath, primBoundingBox: primBoundingBox)
             }
             // The server sends camera transforms under two message types:
             //   "pp_camera_transform" — gated on XR mode being enabled
